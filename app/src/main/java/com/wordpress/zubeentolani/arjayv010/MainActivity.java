@@ -1,9 +1,11 @@
 package com.wordpress.zubeentolani.arjayv010;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -12,13 +14,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.zip.Inflater;
 
 import static android.graphics.Color.parseColor;
 
@@ -30,24 +41,74 @@ public class MainActivity extends Activity {
 //    TextView txView;
 //    Button btn;
 
-    public ListView mainListView ;
-    String[] str = {"str1","srt2","str3","str4","str5","str1","srt2","str3","str4","str5","str1","srt2","str3","str4","str5"};
+    public static FrameLayout mainframeLayout;
+    public static Context context;
+    public static ListView mainListView ;
+    public static String[] str ;//= {"str1","srt2","str3","str4","str5","str6","srt7","str8","str9","str10","str12","srt13","str14","str16","str17","str18","srt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
+    public static File[] files;
+    public static customArrayAdapter arrAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        Log.i("Function", "Inside onCreate of MainActivity");
+//        Log.i("Function", String.format("inside onCreate of MainActivity- id=%d",findViewById(R.id.Main_Linear_Layout).getId()));
 
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        customArrayAdapter arrAdapter = new customArrayAdapter(this, R.layout.explicit_views, str);
-        ArrayAdapter <String> adap = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,str);
+        context = this;
 
         mainListView = (ListView) findViewById(R.id.Main_List_View);
-        mainListView.setAdapter(arrAdapter);
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File dir = new File(String.valueOf(Environment.getExternalStorageDirectory()));
+                if (dir.exists() && dir.isDirectory()){
+                    Log.i("Function", "in if");
+                    files = dir.listFiles(new FilenameFilter(){
+
+                        @Override
+                        public boolean accept(File dir, String filename) {
+                            return filename.contains(".mp3");
+                        }
+
+                    });
+
+
+                }else{
+
+                    Log.i("Function","in else");
+                }
+                int i = 0;
+                for (File file : files){
+                    str[i++] = file.getName();
+                }
+
+                arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
+
+                mainListView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainListView.setAdapter(arrAdapter);
+                    }
+                });
+            }
+        }).start();
+
+
+
+
+
+        Log.i("Function", "Inside onCreate of MainActivity - Array created");
+        Log.i("Function", String.format("inside onCreate of MainActivity- id=%d",findViewById(R.id.Main_Frame_Layout).getId()));
+
+        mainframeLayout = (FrameLayout) findViewById(R.id.Main_Frame_Layout);
+
+//        mainListView.setAdapter(arrAdapter);
+
+        Log.i("Function", "Inside onCreate of MainActivity - Adapter");
 //        mainListView.setAdapter(adap);
 
 //        mainTable = (TableLayout)findViewById(R.id.tbLay);
@@ -55,10 +116,43 @@ public class MainActivity extends Activity {
 //        TextView txtView = (TextView) tblRw.getChildAt(1);
 //        txtView.setText("Changed");
 
+
     }
 
-    public void scrollListFunc ( ){
-        mainListView.scrollBy(10,10);
+    public static void buttonPressed_loadDetailView(View rowView){
+        Log.i("Function", "inside buttonPressed of MainActivity");
+        mainListView.setEnabled(false);
+        mainListView.setVisibility(View.INVISIBLE);
+        View v = ((LayoutInflater)context.getSystemService(context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.detail_view,null);
+
+        mainframeLayout.addView(v);
+        v.setX(rowView.getX());
+        v.setY(rowView.getY());
+
+        Animation DetailViewAnim = null;
+        Animation DetailListAnim = new AnimationUtils().loadAnimation(context,R.anim.show_details_anim);
+        ListView listView = (ListView) v.findViewById(R.id.detail_view_rwDetailListView);
+
+        DetailViewAnim = new TranslateAnimation(
+                Animation.RELATIVE_TO_PARENT,0.0f,
+                Animation.RELATIVE_TO_PARENT,0.0f,
+                Animation.ABSOLUTE,rowView.getY(),
+                Animation.RELATIVE_TO_PARENT,0.0f);
+        DetailViewAnim.setDuration(500);
+        DetailViewAnim.setFillAfter(true);
+
+        v.setY(0)   ;
+        listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+
+
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context,android.R.layout.simple_list_item_1,str);
+        listView.setAdapter(arrayAdapter);
+        listView.setVisibility(View.VISIBLE);
+
+        v.startAnimation(DetailViewAnim);
+        listView.startAnimation(DetailListAnim);
+
     }
 
 
