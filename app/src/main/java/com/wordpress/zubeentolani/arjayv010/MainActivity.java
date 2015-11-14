@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
         mainListView = (ListView) findViewById(R.id.Main_List_View);
 //        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
         arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
+        mainListView.setAdapter(arrAdapter);
 
         new Thread(new Runnable() {
             @Override
