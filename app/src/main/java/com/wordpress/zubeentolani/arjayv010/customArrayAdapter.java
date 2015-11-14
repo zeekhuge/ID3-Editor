@@ -16,22 +16,25 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 public class customArrayAdapter extends ArrayAdapter {
 
     final int resource;
     final Context context;
-    final String[] strings;
+    ArrayList<String> strings = new ArrayList<String>();
     final int isSelected ;
 
-    public customArrayAdapter(Context context, int resource, String[] arrstring, int isSelected1) {
+    public customArrayAdapter(Context context, int resource, ArrayList<String> arrstring, int isSelected1) {
         super(context, -1, arrstring);
         this.context = context;
         this.resource = resource;
         this.strings = arrstring;
         this.isSelected = isSelected1;
     }
+
+
 
     @Override
     public View getView(final int n, View view, ViewGroup viewGroup) {
@@ -44,7 +47,7 @@ public class customArrayAdapter extends ArrayAdapter {
         final Button button = (Button)rowView.findViewById(R.id.mp3_list_view_rwButton);
 
         rowView.setId(n);
-        rwTextView.setText(strings[n]);
+        rwTextView.setText(strings.get(n));
 
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {

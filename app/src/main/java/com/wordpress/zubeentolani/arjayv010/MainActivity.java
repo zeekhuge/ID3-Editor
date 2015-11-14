@@ -3,9 +3,11 @@ package com.wordpress.zubeentolani.arjayv010;
 import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -29,6 +31,7 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.zip.Inflater;
 
 import static android.graphics.Color.parseColor;
@@ -44,9 +47,10 @@ public class MainActivity extends Activity {
     public static FrameLayout mainframeLayout;
     public static Context context;
     public static ListView mainListView ;
-    public static String[] str ;//= {"str1","srt2","str3","str4","str5","str6","srt7","str8","str9","str10","str12","srt13","str14","str16","str17","str18","srt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
+    public static ArrayList<String> str = new ArrayList<String>() ;
+    public static String[] noString = {"str1","srt2","str3","str4","str5","str6","srt7","str8","str9","str10","str12","srt13","str14","str16","str17","str18","srt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
     public static File[] files;
-    public static customArrayAdapter arrAdapter;
+    public static customArrayAdapter arrAdapter = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,40 +64,77 @@ public class MainActivity extends Activity {
         context = this;
 
         mainListView = (ListView) findViewById(R.id.Main_List_View);
+        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
+        mainListView.setAdapter(arrAdapter);
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                File dir = new File(String.valueOf(Environment.getExternalStorageDirectory()));
-                if (dir.exists() && dir.isDirectory()){
-                    Log.i("Function", "in if");
-                    files = dir.listFiles(new FilenameFilter(){
+                Log.i("AlertZeek", "start");
 
+
+
+                File dir = new File(String.format("%s", Environment.getExternalStorageDirectory().getPath().toString()));
+                if (dir.exists() && dir.isDirectory()){
+                    Log.i("AlertZeek","inside if");
+
+
+
+                    files = dir.listFiles(new FilenameFilter(){
                         @Override
                         public boolean accept(File dir, String filename) {
-                            return filename.contains(".mp3");
+                            if (filename.contains(".mp3")){
+                                Log.i("AlertZeek","Found file");
+                                return true;
+                            }
+                            return false;
                         }
-
                     });
-
-
                 }else{
 
-                    Log.i("Function","in else");
+                    Log.i("AlertZeek","inside else");
                 }
-                int i = 0;
+//
+//                int i = 0;
                 for (File file : files){
-                    str[i++] = file.getName();
+
+                    str.add(file.getName());
+                }
+//                str.add(noString[0]) ;
+//                str.add(noString[1]) ;
+                Log.i("AlertZeek", String.format("getting name for %d files", str.size()));
+                if (arrAdapter == null){
+                    Log.i("AlertZeek", "F**");
                 }
 
-                arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
-
+                if (arrAdapter == null){
+                    Log.i("AlertZeek", "WTF");
+                }
                 mainListView.post(new Runnable() {
                     @Override
                     public void run() {
-                        mainListView.setAdapter(arrAdapter);
+                        mainListView.deferNotifyDataSetChanged();
                     }
                 });
+                Log.i("AlertZeek", "made");
             }
         }).start();
 
@@ -106,7 +147,11 @@ public class MainActivity extends Activity {
 
         mainframeLayout = (FrameLayout) findViewById(R.id.Main_Frame_Layout);
 
-//        mainListView.setAdapter(arrAdapter);
+//        str.add(noString[0]) ;
+//        str.add(noString[1]) ;
+
+
+
 
         Log.i("Function", "Inside onCreate of MainActivity - Adapter");
 //        mainListView.setAdapter(adap);
