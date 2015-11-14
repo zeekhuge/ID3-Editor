@@ -27,7 +27,7 @@ public class MainActivity extends Activity {
     public static FrameLayout mainframeLayout;
     public static Context context;
     public static ListView mainListView ;
-    public static ArrayList<String> str = new ArrayList<String>() ;
+    public static ArrayList<String[]> str = new ArrayList<String[]>() ;
     public static String[] noString = {"Astr1","Hsrt2","Qstr3","Estr4","stRr5","Qstr6","dsrt7","sgtr8","astr9","sjtr10","rstr12","tsrt13","jstr14","pstr16","istr17","nstr18","gsrt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
     public static File[] files;
     public static customArrayAdapter arrAdapter = null;
@@ -45,16 +45,16 @@ public class MainActivity extends Activity {
         context = this;
 
         mainListView = (ListView) findViewById(R.id.Main_List_View);
-//        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
-        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
+        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
+//        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
         mainListView.setAdapter(arrAdapter);
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.i("AlertZeek", "start");
-
-                str = scanForMp3();
+                Log.i("AlertZeek", "Inside Thread to load mp3 files");
+                str.addAll(scanForMp3());
+//                while (str.)
 
                 mainListView.post(new Runnable() {
                     @Override
@@ -71,13 +71,13 @@ public class MainActivity extends Activity {
 
 
         Log.i("Function", "Inside onCreate of MainActivity - Array created");
-        Log.i("Function", String.format("inside onCreate of MainActivity- id=%d",findViewById(R.id.Main_Frame_Layout).getId()));
+        Log.i("Function", String.format("inside onCreate of MainActivity- id=%d", findViewById(R.id.Main_Frame_Layout).getId()));
 
         mainframeLayout = (FrameLayout) findViewById(R.id.Main_Frame_Layout);
 
-//        str.add(noString[0]) ;
-//        str.add(noString[1]) ;
-
+//        str.add(new String[]{noString[0]," "}) ;
+//        str.add(new String[]{noString[1]," "}) ;
+//        mainListView.deferNotifyDataSetChanged();
 
 
 
@@ -95,9 +95,10 @@ public class MainActivity extends Activity {
 
 
 
-    public ArrayList<String> scanForMp3(){
+    public ArrayList<String []> scanForMp3(){
         Log.i("AlertZeek","inside scanForMp3 in MainActivity");
 
+        ArrayList<String[]> arr = new ArrayList<String[]>();
         Cursor list = getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 new String[]{ MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA},
@@ -106,13 +107,18 @@ public class MainActivity extends Activity {
                 null);
 
         list.moveToFirst();
+        int i = 0;
         while(!list.isAfterLast()){
-            Log.i("ZeekMP3",new File(String.valueOf(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)).getPath());
+//            Log.i("ZeekMP3",String.format("Title=%s \n Data=%s",list.getString(0),list.getString(1)));
+            arr.add(new String[]{list.getString(0),list.getString(1)});
+//            Log.i("ZeekMP3", String.format("Title=%s \n Data=%s", arr.get(i)[0], arr.get(i)[1]));
             list.moveToNext();
         }
 
+
+
         list.close();
-        return null;
+        return arr;
     }
 
 

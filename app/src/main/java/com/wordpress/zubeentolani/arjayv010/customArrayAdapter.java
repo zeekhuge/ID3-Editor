@@ -23,11 +23,11 @@ public class customArrayAdapter extends ArrayAdapter {
 
     final int resource;
     final Context context;
-//    String[] strings = new ArrayList<String>();
-    String[] strings ;
+    ArrayList<String[]> strings = new ArrayList<String[]>();
+//    String[] strings ;
     final int isSelected ;
 
-    public customArrayAdapter(Context context, int resource, String[] arrstring, int isSelected1) {
+    public customArrayAdapter(Context context, int resource, ArrayList<String[]> arrstring, int isSelected1) {
         super(context, -1, arrstring);
         this.context = context;
         this.resource = resource;
@@ -40,6 +40,7 @@ public class customArrayAdapter extends ArrayAdapter {
     @Override
     public View getView(final int n, View view, ViewGroup viewGroup) {
 
+        Log.i("AlertZeek","Inside getView of customArrayAdapter");
         final ListView[] lstVw = new ListView[1];
         final View rowView = ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(this.resource, viewGroup, false);
         final LinearLayout linearLayout = (LinearLayout)rowView.findViewById(R.id.mp3_list_view_topLinearLay);
@@ -48,8 +49,8 @@ public class customArrayAdapter extends ArrayAdapter {
         final Button button = (Button)rowView.findViewById(R.id.mp3_list_view_rwButton);
 
         rowView.setId(n);
-        imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_"+strings[n].substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
-        rwTextView.setText(strings[n]);
+        imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_"+strings.get(n)[0].substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
+        rwTextView.setText(strings.get(n)[0]);
 
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
