@@ -23,9 +23,8 @@
                 android:layout_height="60dp"
                 android:gravity="center_vertical"
                 android:layout_marginRight="10dp"
-                android:padding="10dp"
-                android:background="#ffffff"
                 android:scaleType="centerInside"
+                android:background="#00ffffff"
                 android:layout_weight="0.1" />
 
             <TextView android:id="@+id/detail_list_view_rwTextView"

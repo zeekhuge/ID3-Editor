@@ -23,10 +23,11 @@ public class customArrayAdapter extends ArrayAdapter {
 
     final int resource;
     final Context context;
-    ArrayList<String> strings = new ArrayList<String>();
+//    String[] strings = new ArrayList<String>();
+    String[] strings ;
     final int isSelected ;
 
-    public customArrayAdapter(Context context, int resource, ArrayList<String> arrstring, int isSelected1) {
+    public customArrayAdapter(Context context, int resource, String[] arrstring, int isSelected1) {
         super(context, -1, arrstring);
         this.context = context;
         this.resource = resource;
@@ -47,12 +48,13 @@ public class customArrayAdapter extends ArrayAdapter {
         final Button button = (Button)rowView.findViewById(R.id.mp3_list_view_rwButton);
 
         rowView.setId(n);
-        rwTextView.setText(strings.get(n));
+        imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_"+strings[n].substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
+        rwTextView.setText(strings[n]);
 
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
-                Log.i("Function", String.format("inside onClick of customAdapter id=%d ", button.getId()));
+                Log.i("AlertZeek", String.format("inside onClick of customAdapter id=%d ", button.getId()));
 
 
 //                rowView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

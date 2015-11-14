@@ -1,21 +1,13 @@
 package com.wordpress.zubeentolani.arjayv010;
 
 import android.app.Activity;
-import android.app.Service;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
@@ -25,32 +17,21 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.zip.Inflater;
-
-import static android.graphics.Color.parseColor;
-
 
 public class MainActivity extends Activity {
-
-//    TableLayout mainTable ;
-//    ImageView imVw;
-//    TextView txView;
-//    Button btn;
 
     public static FrameLayout mainframeLayout;
     public static Context context;
     public static ListView mainListView ;
     public static ArrayList<String> str = new ArrayList<String>() ;
-    public static String[] noString = {"str1","srt2","str3","str4","str5","str6","srt7","str8","str9","str10","str12","srt13","str14","str16","str17","str18","srt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
+    public static String[] noString = {"Astr1","Hsrt2","Qstr3","Estr4","stRr5","Qstr6","dsrt7","sgtr8","astr9","sjtr10","rstr12","tsrt13","jstr14","pstr16","istr17","nstr18","gsrt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
     public static File[] files;
     public static customArrayAdapter arrAdapter = null;
+    Cursor songsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,70 +45,16 @@ public class MainActivity extends Activity {
         context = this;
 
         mainListView = (ListView) findViewById(R.id.Main_List_View);
-        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
-        mainListView.setAdapter(arrAdapter);
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
+        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.i("AlertZeek", "start");
 
+                str = scanForMp3();
 
-
-                File dir = new File(String.format("%s", Environment.getExternalStorageDirectory().getPath().toString()));
-                if (dir.exists() && dir.isDirectory()){
-                    Log.i("AlertZeek","inside if");
-
-
-
-                    files = dir.listFiles(new FilenameFilter(){
-                        @Override
-                        public boolean accept(File dir, String filename) {
-                            if (filename.contains(".mp3")){
-                                Log.i("AlertZeek","Found file");
-                                return true;
-                            }
-                            return false;
-                        }
-                    });
-                }else{
-
-                    Log.i("AlertZeek","inside else");
-                }
-//
-//                int i = 0;
-                for (File file : files){
-
-                    str.add(file.getName());
-                }
-//                str.add(noString[0]) ;
-//                str.add(noString[1]) ;
-                Log.i("AlertZeek", String.format("getting name for %d files", str.size()));
-                if (arrAdapter == null){
-                    Log.i("AlertZeek", "F**");
-                }
-
-                if (arrAdapter == null){
-                    Log.i("AlertZeek", "WTF");
-                }
                 mainListView.post(new Runnable() {
                     @Override
                     public void run() {
@@ -154,6 +81,7 @@ public class MainActivity extends Activity {
 
 
         Log.i("Function", "Inside onCreate of MainActivity - Adapter");
+
 //        mainListView.setAdapter(adap);
 
 //        mainTable = (TableLayout)findViewById(R.id.tbLay);
@@ -161,22 +89,91 @@ public class MainActivity extends Activity {
 //        TextView txtView = (TextView) tblRw.getChildAt(1);
 //        txtView.setText("Changed");
 
-
+//        scanFor();
     }
 
-    public static void buttonPressed_loadDetailView(View rowView){
-        Log.i("Function", "inside buttonPressed of MainActivity");
+
+
+    public ArrayList<String> scanForMp3(){
+        Log.i("AlertZeek","inside scanForMp3 in MainActivity");
+
+        Cursor list = getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                new String[]{ MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA},
+                String.format("%s!=0", MediaStore.Audio.Media.IS_MUSIC),
+                null,
+                null);
+
+        list.moveToFirst();
+        while(!list.isAfterLast()){
+            Log.i("ZeekMP3",new File(String.valueOf(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)).getPath());
+            list.moveToNext();
+        }
+
+        list.close();
+        return null;
+    }
+
+
+
+    public static void buttonPressed_loadDetailView(final View rowView){
+
+        Log.i("AlertZeek", "inside buttonPressed of MainActivity");
+
         mainListView.setEnabled(false);
-        mainListView.setVisibility(View.INVISIBLE);
-        View v = ((LayoutInflater)context.getSystemService(context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.detail_view,null);
+
+        String st;
+        final View v = ((LayoutInflater)context.getSystemService(context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.detail_view,null);
+        TextView tx = (TextView) v.findViewById(R.id.detail_view_rwTextView);
+        ImageView im = (ImageView) v.findViewById(R.id.detail_view_rwImageView);
+        Button btn = (Button) v.findViewById(R.id.detail_view_rwButton);
+        final ListView listView = (ListView) v.findViewById(R.id.detail_view_rwDetailListView);
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View btV) {
+
+                Log.i("AlertZeeek", "inside onClick to reach back to mp3List");
+
+                mainListView.setVisibility(View.VISIBLE);
+
+                Animation DetailListAnim = new AnimationUtils().loadAnimation(context,R.anim.remove_details_anim);
+                Animation DetailViewAnim = new TranslateAnimation(
+                        Animation.RELATIVE_TO_PARENT,0.0f,
+                        Animation.RELATIVE_TO_PARENT,0.0f,
+                        Animation.ABSOLUTE,-rowView.getY(),
+                        Animation.RELATIVE_TO_PARENT,0.0f);
+                DetailViewAnim.setDuration(500);
+                DetailViewAnim.setFillAfter(true);
+
+                v.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+                v.setY(rowView.getY());
+                v.startAnimation(DetailViewAnim);
+                listView.startAnimation(DetailListAnim);
+                android.os.Handler hand = new android.os.Handler();
+                hand.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainframeLayout.removeView(v);
+                        mainListView.setEnabled(true);
+                    }
+                },500);
+            }
+        });
+
+
+        v.setX(rowView.getX());
+        v.setY(0);
+        st = ((TextView) rowView.findViewById(R.id.mp3_list_view_rwTextView)).getText().toString();
+        tx.setText(st);
+        im.setImageResource(im.getContext().getResources().getIdentifier("_" + st.substring(0, 1).toLowerCase(), "drawable", im.getContext().getPackageName()));;
+
 
         mainframeLayout.addView(v);
-        v.setX(rowView.getX());
-        v.setY(rowView.getY());
 
-        Animation DetailViewAnim = null;
+        Animation DetailViewAnim;
         Animation DetailListAnim = new AnimationUtils().loadAnimation(context,R.anim.show_details_anim);
-        ListView listView = (ListView) v.findViewById(R.id.detail_view_rwDetailListView);
+
 
         DetailViewAnim = new TranslateAnimation(
                 Animation.RELATIVE_TO_PARENT,0.0f,
@@ -186,17 +183,23 @@ public class MainActivity extends Activity {
         DetailViewAnim.setDuration(500);
         DetailViewAnim.setFillAfter(true);
 
-        v.setY(0)   ;
         listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
 
 
-
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context,android.R.layout.simple_list_item_1,str);
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context,android.R.layout.simple_list_item_1,noString);
         listView.setAdapter(arrayAdapter);
         listView.setVisibility(View.VISIBLE);
 
         v.startAnimation(DetailViewAnim);
         listView.startAnimation(DetailListAnim);
+        android.os.Handler hand = new android.os.Handler();
+        hand.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mainListView.setVisibility(View.INVISIBLE);
+            }
+        }, 500);
+
 
     }
 

@@ -10,6 +10,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="10dp"
             android:id="@+id/detail_view_topLinearLay">
 
             <ImageView
@@ -18,8 +19,7 @@
                 android:layout_height="60dp"
                 android:gravity="center_vertical"
                 android:layout_marginRight="10dp"
-                android:padding="10dp"
-                android:background="#ffffff"
+                android:background="#00ffffff"
                 android:scaleType="centerInside"
                 android:layout_weight="0.1" />
 
@@ -49,6 +49,8 @@
         <ListView android:id="@+id/detail_view_rwDetailListView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
             android:visibility="invisible"
             android:layout_gravity="center_vertical"
             android:background="#aaaa00"/>

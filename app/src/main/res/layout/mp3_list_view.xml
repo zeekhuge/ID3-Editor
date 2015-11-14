@@ -9,6 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="0.5"
+        android:layout_margin="10dp"
         android:id="@+id/mp3_list_view_topLinearLay">
 
         <ImageView
@@ -17,8 +18,7 @@
             android:layout_height="60dp"
             android:gravity="center_vertical"
             android:layout_marginRight="10dp"
-            android:padding="10dp"
-            android:background="#ffffff"
+            android:background="#00ffffff"
             android:scaleType="centerInside"
             android:layout_weight="0.1" />
 
