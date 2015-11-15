@@ -50,13 +50,12 @@
 
         </LinearLayout>
 
-        <TextView android:id="@+id/detail_list_view_rwDetailTextView"
+        <EditText android:id="@+id/detail_list_view_rwDetailTextView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:visibility="invisible"
             android:layout_gravity="center_vertical"
             android:background="#ffff00"
-            android:textAlignment="center"
             android:textSize="20dp"/>
     </LinearLayout>
 </LinearLayout>
