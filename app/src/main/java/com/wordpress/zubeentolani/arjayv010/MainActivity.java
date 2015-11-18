@@ -19,33 +19,131 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+
+class frameObject {
+    public long framePostion;
+    public String frameDetail;
+    public boolean detailsVisible = false;
+
+    public frameObject(long framePos, String frameDet){
+        this.framePostion = framePos;
+        this.frameDetail = frameDet ;
+    }
+
+}
 
 public class MainActivity extends Activity {
 
     public static FrameLayout mainframeLayout;
     public static Context context;
     public static ListView mainListView ;
-    public static ArrayList<String[]> str = new ArrayList<String[]>() ;
+    public static ArrayList<String[]> mp3SongsList = new ArrayList<String[]>() ;
+    public static ArrayList<frameObject> tagList = new ArrayList<frameObject>() ;
+
     public static String[] noString = {"Astr1","Hsrt2","Qstr3","Estr4","stRr5","Qstr6","dsrt7","sgtr8","astr9","sjtr10","rstr12","tsrt13","jstr14","pstr16","istr17","nstr18","gsrt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
+
+    public static String[] supportedID3Frames = new String[]{
+         "TALB",
+         "TPE2",
+         "COMR",
+         "WCOM",
+         "TCOM",
+         "TIT1",
+         "TPE3",
+         "WCOP",
+         "TCOP",
+         "TDAT",
+         "TOWN",
+         "IPLS",
+         "TEXT",
+         "TPE1",
+         "MCDI",
+         "TOAL",
+         "TOPE",
+         "TOFN",
+         "TOLY",
+         "TORY",
+         "OWNE",
+         "WPAY",
+         "PCNT",
+         "POPM",
+         "TPUB",
+         "TRDA",
+         "TSIZ",
+         "TIT3",
+         "USER",
+         "TIME",
+         "TIT2",
+         "UFID",
+         "TYER",
+         "TXXX"
+    };
+
+    public static String[] frameName = new String[]{
+        "Album/Movie/Show title",
+        "Band/orchestra/accompaniment",
+        "Commercial frame",
+        "Commercial information (UnEditable)",
+        "Composer",
+        "Content group description",
+        "Conductor/performer refinement",
+        "Copyright/Legal information",
+        "Copyright message",
+        "Date (Format DDMM)",
+        "File owner/licensee",
+        "Involved people list",
+        "Lyricist/Text writer",
+        "Lead performer(s)/Soloist(s)",
+        "Music CD identifier",
+        "Original album/movie/show title",
+        "Original artist(s)/performer(s)",
+        "Original filename",
+        "Original lyricist(s)/text writer(s)",
+        "Original release year",
+        "Ownership frame",
+        "Payment",
+        "Play counter",
+        "Popularimeter",
+        "Publisher",
+        "Recording dates",
+        "Size",
+        "Subtitle/Description refinement",
+        "Terms of use",
+        "Time (Format HHMM)",
+        "Title/songname/content description",
+        "Unique file identifier",
+        "Year"
+    };
+
+
+
+
     public static File[] files;
     public static customArrayAdapter arrAdapter = null;
-    Cursor songsList;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-//        Log.i("Function", String.format("inside onCreate of MainActivity- id=%d",findViewById(R.id.Main_Linear_Layout).getId()));
-
+        Log.i("AlertZeek", "Inside onCreate of MainActivity");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         context = this;
 
         mainListView = (ListView) findViewById(R.id.Main_List_View);
-        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, str,0);
+        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, mp3SongsList);
 //        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
         mainListView.setAdapter(arrAdapter);
 
@@ -53,7 +151,7 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 Log.i("AlertZeek", "Inside Thread to load mp3 files");
-                str.addAll(scanForMp3());
+                mp3SongsList.addAll(scanForMp3());
 //                while (str.)
 
                 mainListView.post(new Runnable() {
@@ -107,15 +205,12 @@ public class MainActivity extends Activity {
                 null);
 
         list.moveToFirst();
-        int i = 0;
-        while(!list.isAfterLast()){
+        while(!list.isAfterLast()) {
 //            Log.i("ZeekMP3",String.format("Title=%s \n Data=%s",list.getString(0),list.getString(1)));
-            arr.add(new String[]{list.getString(0),list.getString(1)});
-//            Log.i("ZeekMP3", String.format("Title=%s \n Data=%s", arr.get(i)[0], arr.get(i)[1]));
+            arr.add(new String[]{list.getString(0), list.getString(1)});
             list.moveToNext();
+//            Log.i("ZeekMP3", String.format("Title=%s \n Data=%s", arr.get(i)[0], arr.get(i)[1
         }
-
-
 
         list.close();
         return arr;
@@ -123,94 +218,292 @@ public class MainActivity extends Activity {
 
 
 
+
     public static void buttonPressed_loadDetailView(final View rowView){
 
         Log.i("AlertZeek", "inside buttonPressed of MainActivity");
 
-        mainListView.setEnabled(false);
+        tagList.clear();
+        for (int i =0; i < frameName.length; i++) {
+            tagList.add(new frameObject(0,null));
+        }
 
-        String st;
-        final View v = ((LayoutInflater)context.getSystemService(context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.detail_view,null);
-        TextView tx = (TextView) v.findViewById(R.id.detail_view_rwTextView);
-        ImageView im = (ImageView) v.findViewById(R.id.detail_view_rwImageView);
-        Button btn = (Button) v.findViewById(R.id.detail_view_rwButton);
-        final ListView listView = (ListView) v.findViewById(R.id.detail_view_rwDetailListView);
+        if (fileRead(mp3SongsList.get(rowView.getId())[1]) == true) {
 
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View btV) {
+            mainListView.setEnabled(false);
 
-                Log.i("AlertZeeek", "inside onClick to reach back to mp3List");
+            String st;
+            final View v = ((LayoutInflater) context.getSystemService(context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.detail_view, null);
+            TextView tx = (TextView) v.findViewById(R.id.detail_view_rwTextView);
+            ImageView im = (ImageView) v.findViewById(R.id.detail_view_rwImageView);
+            Button btn = (Button) v.findViewById(R.id.detail_view_rwButton);
+            final ListView listView = (ListView) v.findViewById(R.id.detail_view_rwDetailListView);
 
-                mainListView.setVisibility(View.VISIBLE);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View btV) {
 
-                Animation DetailListAnim = new AnimationUtils().loadAnimation(context,R.anim.remove_details_anim);
-                Animation DetailViewAnim = new TranslateAnimation(
-                        Animation.RELATIVE_TO_PARENT,0.0f,
-                        Animation.RELATIVE_TO_PARENT,0.0f,
-                        Animation.ABSOLUTE,-rowView.getY(),
-                        Animation.RELATIVE_TO_PARENT,0.0f);
-                DetailViewAnim.setDuration(500);
-                DetailViewAnim.setFillAfter(true);
+                    Log.i("AlertZeek", "inside onClick to reach back to mp3List");
 
-                v.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
-                v.setY(rowView.getY());
-                v.startAnimation(DetailViewAnim);
-                listView.startAnimation(DetailListAnim);
-                android.os.Handler hand = new android.os.Handler();
-                hand.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mainframeLayout.removeView(v);
-                        mainListView.setEnabled(true);
-                    }
-                },500);
+                    mainListView.setVisibility(View.VISIBLE);
+
+                    Animation DetailListAnim = new AnimationUtils().loadAnimation(context, R.anim.remove_details_anim);
+                    Animation DetailViewAnim = new TranslateAnimation(
+                            Animation.RELATIVE_TO_PARENT, 0.0f,
+                            Animation.RELATIVE_TO_PARENT, 0.0f,
+                            Animation.ABSOLUTE, -rowView.getY(),
+                            Animation.RELATIVE_TO_PARENT, 0.0f);
+                    DetailViewAnim.setDuration(500);
+                    DetailViewAnim.setFillAfter(true);
+
+                    v.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+                    v.setY(rowView.getY());
+                    v.startAnimation(DetailViewAnim);
+                    listView.startAnimation(DetailListAnim);
+                    android.os.Handler hand = new android.os.Handler();
+                    hand.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainframeLayout.removeView(v);
+                            mainListView.setEnabled(true);
+                            tagList.clear();
+                        }
+                    }, 500);
+                }
+            });
+
+
+            v.setX(rowView.getX());
+            v.setY(0);
+            st = ((TextView) rowView.findViewById(R.id.mp3_list_view_rwTextView)).getText().toString();
+            tx.setText(st);
+            im.setImageResource(im.getContext().getResources().getIdentifier("_" + st.substring(0, 1).toLowerCase(), "drawable", im.getContext().getPackageName()));
+            ;
+
+
+            mainframeLayout.addView(v);
+
+            Animation DetailViewAnim;
+            Animation DetailListAnim = new AnimationUtils().loadAnimation(context, R.anim.show_details_anim);
+
+
+            DetailViewAnim = new TranslateAnimation(
+                    Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.ABSOLUTE, rowView.getY(),
+                    Animation.RELATIVE_TO_PARENT, 0.0f);
+            DetailViewAnim.setDuration(500);
+            DetailViewAnim.setFillAfter(true);
+
+            listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+
+
+//        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context,android.R.layout.simple_list_item_1,noString);
+            detail_list_class arrayAdapter = new detail_list_class(context, R.layout.detail_list_view, tagList);
+            listView.setAdapter(arrayAdapter);
+            listView.setVisibility(View.VISIBLE);
+
+            v.startAnimation(DetailViewAnim);
+            listView.startAnimation(DetailListAnim);
+            android.os.Handler hand = new android.os.Handler();
+            hand.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mainListView.setVisibility(View.INVISIBLE);
+                }
+            }, 500);
+
+        }else{
+
+        }
+    }
+
+
+
+
+public static boolean fileRead (String address){
+
+    Log.i("AlertZeek","Inside fileRead of MainActivity with address " + address);
+    File fileToRead = new File(address);
+    InputStream streamInput = null;
+    boolean flag = false;
+    byte[] bytesRead = new byte[3] ;
+    int numberOfBytes;
+    char[] readString;
+    int i ;
+    try{
+        streamInput = new BufferedInputStream( new FileInputStream(address) ) ;
+        streamInput.read(bytesRead, 0, 3);
+        if ((new String(bytesRead)).substring(0,3).compareTo("ID3") == 0){
+            Log.i("AlertZeek","Contains compatible ID3 data --" + (new String(bytesRead)).substring(0,3));
+            flag =true;
+            readID3Tags(new BufferedInputStream( new FileInputStream(address) ) );
+        }
+        else{
+            Log.i("AlertZeek","Contains IN-compatible ID3 data --"+ (new String(bytesRead)).substring(0,3));
+            flag = false;
+        }
+
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+    return flag;
+}
+
+
+
+
+    public static void readID3Tags(InputStream inStream) throws IOException {
+
+        Log.i("AlertZeek","Inside readID3Tags in MainActivity");
+        byte[] readByte = new byte[1] ;
+        long goneThruoghBytes = 0 ;
+        byte extendedHeaderPresentBit;
+        long tagSize = 0;
+
+        byte [] frameID = new byte[4];
+        long frameSize ;
+        byte frameFlags ;
+        int frameIndex ;
+
+        goneThruoghBytes += inStream.skip(5);
+
+
+        //read header flags especially extended header bit
+        extendedHeaderPresentBit =(byte) ((byte)inStream.read() & (1<<7) );
+
+
+
+        //read total tag size - 10 (size of header)
+        tagSize |= ((byte)inStream.read());
+        tagSize = tagSize << 7;
+        tagSize |= ((byte)inStream.read());
+        tagSize = tagSize << 7;
+        tagSize |= ((byte)inStream.read());
+        tagSize = tagSize << 7;
+        tagSize |= ((byte)inStream.read());
+
+
+
+        if (extendedHeaderPresentBit != 0)
+        {
+            Log.i("AlertZeek","extended header IS present and tagSize = " + tagSize);
+
+        }else{
+            Log.i("AlertZeek","extended header NOT Present and tagSize = " + tagSize);
+        }
+
+        while(goneThruoghBytes < tagSize){
+
+            goneThruoghBytes += inStream.read(frameID);
+
+            frameSize = 0;
+
+            frameSize |= ((long)inStream.read());
+            frameSize = frameSize << 8;
+
+            frameSize |= ((long)inStream.read());
+            frameSize = frameSize << 8;
+
+            frameSize |= ((long)inStream.read());
+            frameSize = frameSize << 8;
+
+            frameSize |= ((long)inStream.read());
+
+
+            goneThruoghBytes += inStream.skip(1);
+
+            frameFlags = (byte) inStream.read();
+
+            goneThruoghBytes += 5;
+
+            frameIndex = isSupportedFrame (frameID,frameFlags);
+            if ( frameIndex != -1){
+                byte[] frameDescription = new byte[(int) frameSize];
+
+                tagList.set(frameIndex,new frameObject(goneThruoghBytes,""));
+                goneThruoghBytes += inStream.read(frameDescription);
+                parseFrame (new String(frameID),frameSize,frameDescription,frameIndex);
+
+            } else{
+                goneThruoghBytes += inStream.skip( frameSize );
+
             }
-        });
 
-
-        v.setX(rowView.getX());
-        v.setY(0);
-        st = ((TextView) rowView.findViewById(R.id.mp3_list_view_rwTextView)).getText().toString();
-        tx.setText(st);
-        im.setImageResource(im.getContext().getResources().getIdentifier("_" + st.substring(0, 1).toLowerCase(), "drawable", im.getContext().getPackageName()));;
-
-
-        mainframeLayout.addView(v);
-
-        Animation DetailViewAnim;
-        Animation DetailListAnim = new AnimationUtils().loadAnimation(context,R.anim.show_details_anim);
-
-
-        DetailViewAnim = new TranslateAnimation(
-                Animation.RELATIVE_TO_PARENT,0.0f,
-                Animation.RELATIVE_TO_PARENT,0.0f,
-                Animation.ABSOLUTE,rowView.getY(),
-                Animation.RELATIVE_TO_PARENT,0.0f);
-        DetailViewAnim.setDuration(500);
-        DetailViewAnim.setFillAfter(true);
-
-        listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-
-
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context,android.R.layout.simple_list_item_1,noString);
-        listView.setAdapter(arrayAdapter);
-        listView.setVisibility(View.VISIBLE);
-
-        v.startAnimation(DetailViewAnim);
-        listView.startAnimation(DetailListAnim);
-        android.os.Handler hand = new android.os.Handler();
-        hand.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mainListView.setVisibility(View.INVISIBLE);
-            }
-        }, 500);
-
+        }
 
     }
 
 
+
+    public static int isSupportedFrame(byte[] frameID,byte frameFlags){
+
+        String IDToCompare = new String(frameID);
+        Log.i("AlertZeek","FrameID encountered is = " + IDToCompare);
+        for (int i =0; i < supportedID3Frames.length; i++){
+            if (supportedID3Frames[i].compareTo(IDToCompare) == 0){
+               if ( ((frameFlags & (1<<7)) | (frameFlags & (1<<6))) == 0) {
+                   Log.i("AlertZeek","Frame is supported");
+                   return i;
+               }else{
+                Log.i("AlertZeek","Compressed or encrypted frame");
+               }
+            }
+        }
+        return -1;
+    }
+
+
+
+    public static void  parseFrame (String frameID, long frameSize,  byte[] frameDescription, int frameIndex){
+
+        Log.i("AlertZeek", "frame ID is = " + new String(frameID) + " frame size is = " + frameSize + " frame description = " + frameDescription);
+        if(frameID.compareTo("TXXX") == 0) {
+            Log.i("AlertZeek", "Reading "+ frameID + " frame");
+        }
+        if(frameID.charAt(0) == 'T') {
+            Log.i("AlertZeek", "Reading "+ frameID + " frame");
+            tagList.set(frameIndex,new frameObject(tagList.get(frameIndex).framePostion,textInformationParser(frameDescription)));
+        }
+
+    }
+
+    public static String textInformationParser (byte[] description) {
+
+        if (description[0] == 1) {
+            Log.i("AlertZeek","Text data encoded in 1");
+            int length = (description.length - 3 ) / 2;
+            if (length > 0) {
+                byte[] transformed = new byte[length];
+                for (int i = 0; i < length; i++) {
+                    transformed[i] = description[(i * 2) + 3];
+                }
+                return new String(transformed);
+            }
+            else {
+                return null;
+            }
+
+        } else if (description[0] == 0) {
+            Log.i("AlertZeek","Text data encoded in 0");
+            int length = (description.length - 1);
+            if (length > 0) {
+                byte[] transformed = new byte[length];
+                for (int i = 0; i < length; i++) {
+                    transformed[i] = description[i + 1];
+                }
+                return new String(transformed);
+            } else {
+                return null;
+            }
+        }
+
+        return null;
+
+    }
 //    void openUpDetails (View v){
 //
 //        Log.i("Function", "Inside openDetails of MainActivity");

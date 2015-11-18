@@ -54,6 +54,7 @@
             android:padding="10dp"
             android:visibility="invisible"
             android:layout_gravity="center_vertical"
+            android:descendantFocusability="afterDescendants"
             android:background="#aaaa00"/>
 
 </LinearLayout>

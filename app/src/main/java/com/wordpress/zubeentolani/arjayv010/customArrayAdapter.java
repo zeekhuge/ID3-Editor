@@ -25,14 +25,13 @@ public class customArrayAdapter extends ArrayAdapter {
     final Context context;
     ArrayList<String[]> strings = new ArrayList<String[]>();
 //    String[] strings ;
-    final int isSelected ;
 
-    public customArrayAdapter(Context context, int resource, ArrayList<String[]> arrstring, int isSelected1) {
+
+    public customArrayAdapter(Context context, int resource, ArrayList<String[]> arrstring ) {
         super(context, -1, arrstring);
         this.context = context;
         this.resource = resource;
         this.strings = arrstring;
-        this.isSelected = isSelected1;
     }
 
 
