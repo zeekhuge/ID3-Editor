@@ -1,16 +1,26 @@
 package com.wordpress.zubeentolani.arjayv010;
 
+import android.app.ActionBar;
 import android.app.Activity;
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -18,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -32,6 +43,7 @@ class frameObject {
     public String frameDetail;
     public boolean detailsVisible = false;
 
+
     public frameObject(long framePos, String frameDet){
         this.framePostion = framePos;
         this.frameDetail = frameDet ;
@@ -39,11 +51,16 @@ class frameObject {
 
 }
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements DialogBox.DialogBoxListner {
 
+    public boolean frameDataChangedFlag = false;
+
+    public static Menu mainMenu;
+    public static ActionBar actionBar;
     public static FrameLayout mainframeLayout;
     public static Context context;
     public static ListView mainListView ;
+    public static ListView listViewSecond;
     public static ArrayList<String[]> mp3SongsList = new ArrayList<String[]>() ;
     public static ArrayList<frameObject> tagList = new ArrayList<frameObject>() ;
 
@@ -147,12 +164,32 @@ public class MainActivity extends Activity {
 //        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
         mainListView.setAdapter(arrAdapter);
 
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.i("AlertZeek", "Inside Thread to load mp3 files");
-                mp3SongsList.addAll(scanForMp3());
-//                while (str.)
+
+                ArrayList<String[]> arr = new ArrayList<String[]>();
+                Cursor list = getContentResolver().query(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        new String[]{ MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA},
+                        String.format("%s!=0", MediaStore.Audio.Media.IS_MUSIC),
+                        null,
+                        null);
+
+                list.moveToFirst();
+                while(!list.isAfterLast()) {
+//            Log.i("ZeekMP3",String.format("Title=%s \n Data=%s",list.getString(0),list.getString(1)));
+                    arr.add(new String[]{list.getString(0), list.getString(1)});
+                    list.moveToNext();
+//            Log.i("ZeekMP3", String.format("Title=%s \n Data=%s", arr.get(i)[0], arr.get(i)[1
+                }
+
+                list.close();
+
+                mp3SongsList.addAll(arr);
+
 
                 mainListView.post(new Runnable() {
                     @Override
@@ -192,6 +229,30 @@ public class MainActivity extends Activity {
     }
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main,menu);
+        mainMenu = menu;
+
+        menu.findItem(R.id.item_more).setVisible(false);
+        menu.findItem(R.id.item_save).setVisible(false);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public static void callDialogBox(int position, int option){
+        Log.i("AlertZeek", "Calling DialogBox");
+        DialogBox frag = new DialogBox();
+
+        if (option == 1) { //it is normal TEXT frame
+            frag.setValues(frameName[position], tagList.get(position).frameDetail, position);
+        }
+        frag.show(((Activity) context).getFragmentManager(), "ManagerZeek");
+    }
+
+/*
 
     public ArrayList<String []> scanForMp3(){
         Log.i("AlertZeek","inside scanForMp3 in MainActivity");
@@ -216,12 +277,13 @@ public class MainActivity extends Activity {
         return arr;
     }
 
-
+*/
 
 
     public static void buttonPressed_loadDetailView(final View rowView){
 
         Log.i("AlertZeek", "inside buttonPressed of MainActivity");
+
 
         tagList.clear();
         for (int i =0; i < frameName.length; i++) {
@@ -238,6 +300,16 @@ public class MainActivity extends Activity {
             ImageView im = (ImageView) v.findViewById(R.id.detail_view_rwImageView);
             Button btn = (Button) v.findViewById(R.id.detail_view_rwButton);
             final ListView listView = (ListView) v.findViewById(R.id.detail_view_rwDetailListView);
+            listViewSecond = listView;
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Log.i("AlertZeek","Detail list click postition =" + position);
+                    callDialogBox(position,1);
+                }
+            });
+
 
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -267,6 +339,8 @@ public class MainActivity extends Activity {
                             mainframeLayout.removeView(v);
                             mainListView.setEnabled(true);
                             tagList.clear();
+                            mainMenu.findItem(R.id.item_more).setVisible(false);
+                            mainMenu.findItem(R.id.item_save).setVisible(false);
                         }
                     }, 500);
                 }
@@ -278,7 +352,7 @@ public class MainActivity extends Activity {
             st = ((TextView) rowView.findViewById(R.id.mp3_list_view_rwTextView)).getText().toString();
             tx.setText(st);
             im.setImageResource(im.getContext().getResources().getIdentifier("_" + st.substring(0, 1).toLowerCase(), "drawable", im.getContext().getPackageName()));
-            ;
+
 
 
             mainframeLayout.addView(v);
@@ -299,6 +373,7 @@ public class MainActivity extends Activity {
 
 
 //        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context,android.R.layout.simple_list_item_1,noString);
+
             detail_list_class arrayAdapter = new detail_list_class(context, R.layout.detail_list_view, tagList);
             listView.setAdapter(arrayAdapter);
             listView.setVisibility(View.VISIBLE);
@@ -306,10 +381,13 @@ public class MainActivity extends Activity {
             v.startAnimation(DetailViewAnim);
             listView.startAnimation(DetailListAnim);
             android.os.Handler hand = new android.os.Handler();
+
             hand.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     mainListView.setVisibility(View.INVISIBLE);
+                    mainMenu.findItem(R.id.item_more).setVisible(true);
+                    mainMenu.findItem(R.id.item_save).setVisible(true);
                 }
             }, 500);
 
@@ -504,7 +582,23 @@ public static boolean fileRead (String address){
         return null;
 
     }
-//    void openUpDetails (View v){
+
+
+    @Override
+    public void onDialogSaveClick(int position,String frameDetail) {
+        Log.i("AlertZeek","Dialog frame data changed");
+        tagList.get(position).frameDetail = frameDetail;
+        listViewSecond.deferNotifyDataSetChanged();
+        frameDataChangedFlag = true;
+        Toast.makeText(this,"Change added to list",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDialogCancelClick(int position) {
+        Log.i("AlertZeek","Dialog cancel click");
+    }
+
+    //    void openUpDetails (View v){
 //
 //        Log.i("Function", "Inside openDetails of MainActivity");
 //

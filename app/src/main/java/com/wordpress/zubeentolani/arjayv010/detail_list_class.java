@@ -1,6 +1,9 @@
 
 package com.wordpress.zubeentolani.arjayv010;
 
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.Context;
 import android.text.Editable;
 import android.text.method.KeyListener;
@@ -26,6 +29,10 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
+
+import static com.wordpress.zubeentolani.arjayv010.R.id.detail_list_view_rwDetailTextView;
+
+
 public class detail_list_class extends ArrayAdapter {
 
     final int resource;
@@ -43,6 +50,9 @@ public class detail_list_class extends ArrayAdapter {
 
 
 
+
+
+
     @Override
     public View getView(final int n, View view, ViewGroup viewGroup) {
 
@@ -52,79 +62,37 @@ public class detail_list_class extends ArrayAdapter {
         final LinearLayout linearLayout = (LinearLayout)rowView.findViewById(R.id.detail_list_view_topLinearLay);
         final TextView rwTextView = (TextView)rowView.findViewById(R.id.detail_list_view_rwTextView);
         final ImageView imageView = (ImageView)rowView.findViewById(R.id.detail_list_view_rwImageView);
-        final Button button = (Button)rowView.findViewById(R.id.detail_list_view_rwButton);
-        final EditText editText = (EditText) rowView.findViewById(R.id.detail_list_view_rwDetailEditText);
+        final TextView detailTextView = (TextView) rowView.findViewById(detail_list_view_rwDetailTextView);
 
-        editText.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.i("AlertZeek","I was touched");
-                v.setFocusable(true);
-                v.setFocusableInTouchMode(true);
-                TextKeyListener.clear(editText.getText());
-                return false;
-            }
-        });
-
-        editText.setKeyListener(new KeyListener() {
-            @Override
-            public int getInputType() {
-                return 0;
-            }
-
-            @Override
-            public boolean onKeyDown(View view, Editable text, int keyCode, KeyEvent event) {
-                return false;
-            }
-
-            @Override
-            public boolean onKeyUp(View view, Editable text, int keyCode, KeyEvent event) {
-                return false;
-            }
-
-            @Override
-            public boolean onKeyOther(View view, Editable text, KeyEvent event) {
-                return false;
-            }
-
-            @Override
-            public void clearMetaKeyState(View view, Editable content, int states) {
-
-            }
-        });
-
-        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                Log.i("AlertZeek","actionId "+ actionId);
-                return false;
-            }
-        });
-        rowView.setTag(editText);
+        rowView.setTag("rowView");
 
 
         rowView.setId(n);
         imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_" + MainActivity.frameName[n].substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
         rwTextView.setText(MainActivity.frameName[n]);
-//        editText.setFocusable(true);
+
         if (strings.get(n).frameDetail == null) {
-            editText.setHint("This frame dose not exist in the file");
+            detailTextView.setText("This frame dose not exist in the file");
         }else if (strings.get(n).frameDetail.compareTo("") == 0) {
-            editText.setHint("This frame is empty");
+            detailTextView.setText("This frame is empty");
         }else{
-            editText.setText(strings.get(n).frameDetail);
-            if (MainActivity.supportedID3Frames[n].compareTo("COMR") == 0){
-                editText.setEnabled(false);
-            }
+            detailTextView.setText(strings.get(n).frameDetail);
         }
 
 
 
+/*
 
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
                 Log.i("AlertZeek", String.format("inside onClick of detail_list_class id=%d ", button.getId()));
+
+                MainActivity.callDialogBox();
+
+
+
+
 
                 if (strings.get(n).detailsVisible == false) {
                     Animation linearLayout_removeAnim = new TranslateAnimation(
@@ -169,13 +137,14 @@ public class detail_list_class extends ArrayAdapter {
                 }
             }
         });
-
-
+*/
+        /*
         if (strings.get(n).detailsVisible==true) {
             editText.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             editText.setMinHeight(60);
             editText.setVisibility(View.VISIBLE);
         }
+        */
 //
 
 

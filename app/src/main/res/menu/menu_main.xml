@@ -1,5 +1,25 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" android:showAsAction="never" />
+    xmlns:thisApp="http://schemas.android.com/apk/res-auto">
+
+    <!--<item android:id="@+id/action_settings"-->
+        <!--android:title="@string/action_settings"-->
+        <!--android:orderInCategory="100"  />-->
+    <item android:id="@+id/item_refresh"
+        android:title="Refresh"
+        android:showAsAction="always"/>
+
+    <item android:id="@+id/item_save"
+        android:title="Save"
+        android:showAsAction="always"/>
+
+    <item android:id="@+id/item_more"
+        android:title="More"
+        android:showAsAction="always">
+        <menu>
+            <item android:id="@+id/item_onlyExistingFrames"
+                android:title="Only Existing Frames"
+                android:showAsAction="never"/>
+        </menu>
+    </item>
+
 </menu>
