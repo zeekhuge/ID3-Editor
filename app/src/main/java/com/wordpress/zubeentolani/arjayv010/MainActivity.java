@@ -339,6 +339,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             case (R.id.item_commitChanges):
                 Log.i("AlertZeek","commitChanges button clicked");
                 item.setEnabled(false);
+                mainMenu.getItem(R.id.item_refresh).setEnabled(false);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -361,6 +362,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                             public void run() {
                                 Toast.makeText(context, "Changes committed", Toast.LENGTH_SHORT).show();
                                 item.setEnabled(true);
+                                mainMenu.getItem(R.id.item_refresh).setEnabled(true);
                             }
                         });
                     }
