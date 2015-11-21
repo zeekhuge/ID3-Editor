@@ -38,29 +38,59 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
-class frameObject {
+class frameObject implements Comparable{
     public String frameID;
     public String frameName;
-    public long framePostion;
+    public long framePosition;
     public String frameDetail;
+    public boolean frameDataChanged = false;
 
 
     public frameObject(String frameID, String frameName, long framePos, String frameDet){
         this.frameID = frameID;
         this.frameName = frameName;
-        this.framePostion = framePos;
+        this.framePosition = framePos;
         this.frameDetail = frameDet ;
 
     }
 
+    @Override
+    public int compareTo(Object another) {
+        int ret = (int) (this.framePosition - ((frameObject)another).framePosition);
+        return ret;
+    }
+
+    public byte[] parsedDataToWrite(int encoding){
+        if (this.frameID.compareTo("TXXX") == 0){
+
+        }
+        else if (this.frameID.charAt(0) == 'T'){
+            if (encoding == 0){
+                return frameDetail.getBytes();
+            }else{
+                byte [] read = frameDetail.getBytes();
+                byte [] ret = new byte[read.length * 2];
+                for (int i =0; i < read.length; i++){
+                    ret[i*2] = read[i];
+                    ret[i*2 + 1] = 0;
+                }
+                return ret;
+            }
+        }
+        return null;
+    }
 }
 
 public class MainActivity extends Activity implements DialogBox.DialogBoxListner {
 
     public boolean frameDataChangedFlag = false;
 
+    public static String fileAddress;
     public static Menu mainMenu;
     public static ActionBar actionBar;
     public static FrameLayout mainframeLayout;
@@ -229,13 +259,14 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         return super.onCreateOptionsMenu(menu);
     }
 
+
+
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Log.i("AlertZeek","optionButton clicked id = " + item.getTitle());
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        Log.i("AlertZeek", "optionButton clicked id = " + item.getTitle());
 
         switch (item.getItemId()){
             case (R.id.item_refresh):
-
                 Log.i("AlertZeek","refresh button clicked");
                 if (mainListView.getVisibility() == View.VISIBLE){
                     new Thread(new Runnable() {
@@ -243,7 +274,9 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                         public void run() {
                             Log.i("AlertZeek", "Inside Thread to load mp3 files");
 
-                            mp3SongsList.addAll(scanForMp3());
+                            ArrayList<String[]> tempList= scanForMp3();
+                            mp3SongsList.clear();
+                            mp3SongsList.addAll(tempList);
 
                             mainListView.post(new Runnable() {
                                 @Override
@@ -259,27 +292,215 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                 }
             break;
             case (R.id.item_onlyExistingFrames):
+                Log.i("AlertZeek","existing/all frames button clicked");
+                if (item.getTitle().toString().compareTo("Show all frames") != 0 ) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (int i = 0; i < tagList.size(); i++) {
+                                if (tagList.get(i).framePosition == -1) {
+                                    tagList.remove(i);
+                                    i--;
+                                }
+                            }
+                            listViewSecond.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((ArrayAdapter) listViewSecond.getAdapter()).notifyDataSetChanged();
+                                }
+                            });
+                        }
+                    }).start();
+                    item.setTitle("Show all frames");
+                }else{
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            int i;
+                            for ( i = 0; i < tagList.size() ; i++) {
+                                if (tagList.get(i).frameID.compareTo(supportedID3Frames[i]) != 0 ) {
+                                    tagList.add(i, new frameObject(supportedID3Frames[i], frameName[i], -1, ""));
+                                }
+                            }
+                            for (; i < frameName.length;i++){
+                                tagList.add(i, new frameObject(supportedID3Frames[i], frameName[i], -1, ""));
+                            }
+                            listViewSecond.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((ArrayAdapter) listViewSecond.getAdapter()).notifyDataSetChanged();
+                                }
+                            });
+                        }
+                    }).start();
+                    item.setTitle("Only existing frames");
+                }
+            break;
+            case (R.id.item_commitChanges):
+                Log.i("AlertZeek","commitChanges button clicked");
+                item.setEnabled(false);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        for (int i =0; i < tagList.size(); i++){
-                            if (tagList.get(i).framePostion == -1){
-                                tagList.remove(i);
-                                i--;
-                            }
-                        }
-                        listViewSecond.post(new Runnable() {
+                        MainActivity.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                ((ArrayAdapter)listViewSecond.getAdapter()).notifyDataSetChanged();
+                                Toast.makeText(context, "Writing changes...", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        try {
+                            commitChangesToFile((ArrayList<frameObject>) tagList.clone());
+
+                        } catch (IOException e) {
+                            Log.i("AlertZeek","Exception in commitChangesToFile");
+                            e.printStackTrace();
+                        }
+                        Log.i("AlertZeek","wrote changes to file");
+                        MainActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Changes committed", Toast.LENGTH_SHORT).show();
+                                item.setEnabled(true);
                             }
                         });
                     }
                 }).start();
             break;
         }
-
         return super.onOptionsItemSelected(item);
+    }
+
+
+
+    public void commitChangesToFile(ArrayList<frameObject> toWrite) throws IOException {
+
+        long wroteTill =0;
+        long readOpFrameSize = 0;
+        long writeOpFrameSize = 0;
+        byte [] sizeAndFlagsBuffer = new byte[6];
+
+        Log.i("AlertZeek","inside commitChangesToFiles toWrite length = " + toWrite.size());
+        RandomAccessFile file = new RandomAccessFile(new File(fileAddress),"rw");
+        RandomAccessFile writeFile = new RandomAccessFile(new File(getFilesDir(),"arjayTempFile.mp3"),"rw");
+
+        for (int i = 0 ; i < toWrite.size(); i++) {
+            if (toWrite.get(i).frameDataChanged != true) {
+                toWrite.remove(i);
+                i--;
+            }
+        }
+        Collections.sort(toWrite);
+
+        for (frameObject obj:toWrite){
+
+            Log.i("AlertZeek", "Frame postion=" + obj.framePosition + " frameID=" + obj.frameID);
+            for (;wroteTill <= obj.framePosition - 6  ; wroteTill++ ){
+                writeFile.write(file.readByte());
+            }
+            writeFile.write(obj.frameID.getBytes());
+
+            file.skipBytes(4);
+
+            readOpFrameSize|= ((long)file.read());
+            readOpFrameSize= readOpFrameSize<< 8;
+
+            readOpFrameSize|= ((long)file.read());
+            readOpFrameSize= readOpFrameSize<< 8;
+
+            readOpFrameSize|= ((long)file.read());
+            readOpFrameSize= readOpFrameSize<< 8;
+
+            readOpFrameSize|= ((long)file.read());
+
+            sizeAndFlagsBuffer[4] = (byte) file.read();
+            sizeAndFlagsBuffer[5] = (byte) file.read();
+
+            if (obj.frameID.compareTo("TXXX") == 0){
+
+            }
+            else if (obj.frameID.charAt(0) == 'T') {
+                if (file.read() == 1) {
+                    writeOpFrameSize = obj.parsedDataToWrite(1).length + 3;
+                    sizeAndFlagsBuffer[0] = (byte) ((writeOpFrameSize & 0xff000000) >> 24);
+                    sizeAndFlagsBuffer[1] = (byte) ((writeOpFrameSize & 0x00ff0000) >> 16);
+                    sizeAndFlagsBuffer[2] = (byte) ((writeOpFrameSize & 0x0000ff00) >> 8);
+                    sizeAndFlagsBuffer[3] = (byte) (writeOpFrameSize & 0x000000ff);
+                    writeFile.write(sizeAndFlagsBuffer);
+                    writeFile.write(1);
+                    writeFile.write(file.read());
+                    writeFile.write(file.read());
+                    writeFile.write(obj.parsedDataToWrite(1));
+                }else{
+                    writeOpFrameSize = obj.parsedDataToWrite(0).length + 1;
+                    sizeAndFlagsBuffer[0] = (byte) ((writeOpFrameSize & 0xff000000) >> 24);
+                    sizeAndFlagsBuffer[1] = (byte) ((writeOpFrameSize & 0x00ff0000) >> 16);
+                    sizeAndFlagsBuffer[2] = (byte) ((writeOpFrameSize & 0x0000ff00) >> 8);
+                    sizeAndFlagsBuffer[3] = (byte) (writeOpFrameSize & 0x000000ff);
+                    writeFile.write(sizeAndFlagsBuffer);
+                    writeFile.write(0);
+                    writeFile.write(obj.parsedDataToWrite(0));
+                }
+            }
+            file.skipBytes((int) (readOpFrameSize-1));
+            wroteTill += readOpFrameSize + 10;
+
+        }
+
+        Log.i("AlertZeek","Wrote all the frames");
+        //Writing to temp file
+        wroteTill += 700;
+        byte[] buffer_here = new byte[700];
+        for (;wroteTill <= file.length();wroteTill+=700){
+            file.read(buffer_here);
+            writeFile.write(buffer_here);
+        }
+
+        wroteTill-=700;
+        for (;wroteTill <= file.length(); wroteTill++){
+            writeFile.write(file.read());
+        }
+
+
+        //Starting to write to original file
+        file.seek(0);
+        writeFile.seek(0);
+
+        wroteTill = 700;
+        for (;wroteTill <= writeFile.length();wroteTill+=700){
+            writeFile.read(buffer_here);
+            file.write(buffer_here);
+        }
+
+        writeFile.close();
+        file.close();
+
+        wroteTill-=700;
+        for (;wroteTill <= writeFile.length(); wroteTill++){
+            file.write(writeFile.read());
+        }
+
+
+//                Log.i("AlertZeek", "Frame changed is = " + obj.frameID + " detail now = " + obj.frameDetail);
+//                file.seek((int) obj.framePosition - 4);
+////                byte [] buffer = new byte[4];
+////                file.read(buffer);
+//                int frameSize = 0;
+//
+//                frameSize |= ((long)file.read());
+//                frameSize = frameSize << 8;
+//
+//                frameSize |= ((long)file.read());
+//                frameSize = frameSize << 8;
+//
+//                frameSize |= ((long)file.read());
+//                frameSize = frameSize << 8;
+//
+//                frameSize |= ((long)file.read());
+//
+//                Log.i("AlertZeek"," size " + frameSize);
+
+
+
     }
 
     public static void callDialogBox(int position, int option){
@@ -325,10 +546,10 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         Log.i("AlertZeek", "inside buttonPressed of MainActivity");
 
 
-//        tagList.clear();
-//        for (int i =0; i < frameName.length; i++) {
-//            tagList.add(new frameObject(supportedID3Frames[i],frameName[i],-1,null));
-//        }
+        tagList.clear();
+        for (int i =0; i < frameName.length; i++) {
+            tagList.add(new frameObject(supportedID3Frames[i],frameName[i],-1,null));
+        }
 
         if (fileRead(mp3SongsList.get(rowView.getId())[1]) == true) {
 
@@ -381,8 +602,11 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                             mainframeLayout.removeView(v);
                             mainListView.setEnabled(true);
                             tagList.clear();
+
                             mainMenu.findItem(R.id.item_more).setVisible(false);
                             mainMenu.findItem(R.id.item_commitChanges).setVisible(false);
+                            mainMenu.findItem(R.id.item_onlyExistingFrames).setTitle("Only existing frames");
+
                             tagList.clear();
                             for (int i =0; i < frameName.length; i++) {
                                 tagList.add(new frameObject(supportedID3Frames[i],frameName[i],-1,null));
@@ -438,7 +662,8 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             }, 500);
 
         }else{
-
+            Log.i("AlertZeek","File does not contains supported ID3 format");
+            Toast.makeText(context,"Unsupported metadata format",Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -448,6 +673,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
     public static boolean fileRead (String address){
 
         Log.i("AlertZeek","Inside fileRead of MainActivity with address " + address);
+        fileAddress = address;
         File fileToRead = new File(address);
         InputStream streamInput = null;
         boolean flag = false;
@@ -467,13 +693,13 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                 Log.i("AlertZeek","Contains IN-compatible ID3 data --"+ (new String(bytesRead)).substring(0,3));
                 flag = false;
             }
+            streamInput.close();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return flag;
     }
 
@@ -548,8 +774,9 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             if ( frameIndex != -1){
                 byte[] frameDescription = new byte[(int) frameSize];
 
-                tagList.get(frameIndex).framePostion = goneThruoghBytes;
+                tagList.get(frameIndex).framePosition = goneThruoghBytes;
                 tagList.get(frameIndex).frameDetail = "";
+
                 goneThruoghBytes += inStream.read(frameDescription);
                 parseFrame (new String(frameID),frameSize,frameDescription,frameIndex);
 
@@ -559,7 +786,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             }
 
         }
-
+        inStream.close();
     }
 
 
@@ -589,11 +816,10 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         if(frameID.compareTo("TXXX") == 0) {
             Log.i("AlertZeek", "Reading "+ frameID + " frame");
         }
-        if(frameID.charAt(0) == 'T') {
+        else if(frameID.charAt(0) == 'T') {
             Log.i("AlertZeek", "Reading " + frameID + " frame");
             tagList.get(frameIndex).frameDetail = textInformationParser(frameDescription);
         }
-
     }
 
     public static String textInformationParser (byte[] description) {
@@ -625,7 +851,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                 return null;
             }
         }
-
         return null;
 
     }
@@ -635,7 +860,8 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
     public void onDialogSaveClick(int position,String frameDetail) {
         Log.i("AlertZeek","Dialog frame data changed");
         tagList.get(position).frameDetail = frameDetail;
-        listViewSecond.deferNotifyDataSetChanged();
+        tagList.get(position).frameDataChanged = true;
+        ((ArrayAdapter)listViewSecond.getAdapter()).notifyDataSetChanged();
         frameDataChangedFlag = true;
         Toast.makeText(this,"Change added to list",Toast.LENGTH_SHORT).show();
     }

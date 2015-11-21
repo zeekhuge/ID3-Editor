@@ -39,7 +39,7 @@ public class customArrayAdapter extends ArrayAdapter {
     @Override
     public View getView(final int n, View view, ViewGroup viewGroup) {
 
-        Log.i("AlertZeek","Inside getView of customArrayAdapter");
+//        Log.i("AlertZeek","Inside getView of customArrayAdapter");
         final ListView[] lstVw = new ListView[1];
         final View rowView = ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(this.resource, viewGroup, false);
         final LinearLayout linearLayout = (LinearLayout)rowView.findViewById(R.id.mp3_list_view_topLinearLay);

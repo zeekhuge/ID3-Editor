@@ -56,8 +56,6 @@ public class detail_list_class extends ArrayAdapter {
     @Override
     public View getView(final int n, View view, ViewGroup viewGroup) {
 
-        Log.i("AlertZeek","Inside getView of detail_list_class");
-
         final View rowView = ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(this.resource, viewGroup, false);
         final LinearLayout linearLayout = (LinearLayout)rowView.findViewById(R.id.detail_list_view_topLinearLay);
         final TextView rwTextView = (TextView)rowView.findViewById(R.id.detail_list_view_rwTextView);
@@ -71,7 +69,7 @@ public class detail_list_class extends ArrayAdapter {
 //        Log.i("AlertZeek", "index = " + n + " id = " + strings.get(n).frameID);
         rwTextView.setText(strings.get(n).frameName);
 
-        if (strings.get(n).framePostion == -1) {
+        if (strings.get(n).framePosition == -1) {
             detailTextView.setText("This frame dose not exist in the file");
 //            Log.i("AlertZeek", "1");
         }else if (strings.get(n).frameDetail.compareTo("") == 0) {
