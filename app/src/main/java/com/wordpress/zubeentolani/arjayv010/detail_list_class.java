@@ -64,21 +64,24 @@ public class detail_list_class extends ArrayAdapter {
         final ImageView imageView = (ImageView)rowView.findViewById(R.id.detail_list_view_rwImageView);
         final TextView detailTextView = (TextView) rowView.findViewById(detail_list_view_rwDetailTextView);
 
-        rowView.setTag("rowView");
 
+        //rowView.setId(n);
+//        Log.i("AlertZeek", "index = " + n + " name = " + strings.get(n).frameName + " id " + strings.get(n).frameID );
+        imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_" + strings.get(n).frameName.substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
+//        Log.i("AlertZeek", "index = " + n + " id = " + strings.get(n).frameID);
+        rwTextView.setText(strings.get(n).frameName);
 
-        rowView.setId(n);
-        imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_" + MainActivity.frameName[n].substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
-        rwTextView.setText(MainActivity.frameName[n]);
-
-        if (strings.get(n).frameDetail == null) {
+        if (strings.get(n).framePostion == -1) {
             detailTextView.setText("This frame dose not exist in the file");
+//            Log.i("AlertZeek", "1");
         }else if (strings.get(n).frameDetail.compareTo("") == 0) {
             detailTextView.setText("This frame is empty");
+//            Log.i("AlertZeek", "2");
         }else{
             detailTextView.setText(strings.get(n).frameDetail);
+//            Log.i("AlertZeek", "3");
         }
-
+//        Log.i("AlertZeek","crossed = "+ n);
 
 
 /*

@@ -2,12 +2,10 @@ package com.wordpress.zubeentolani.arjayv010;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.database.Cursor;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -41,18 +39,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 class frameObject {
-    public String frameID;
-    public String frameName;
     public long framePostion;
     public String frameDetail;
+    public boolean detailsVisible = false;
 
 
-    public frameObject(String frameID, String frameName, long framePos, String frameDet){
-        this.frameID = frameID;
-        this.frameName = frameName;
+    public frameObject(long framePos, String frameDet){
         this.framePostion = framePos;
         this.frameDetail = frameDet ;
-
     }
 
 }
@@ -73,76 +67,76 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
     public static String[] noString = {"Astr1","Hsrt2","Qstr3","Estr4","stRr5","Qstr6","dsrt7","sgtr8","astr9","sjtr10","rstr12","tsrt13","jstr14","pstr16","istr17","nstr18","gsrt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
 
     public static String[] supportedID3Frames = new String[]{
-            "TALB",
-            "TPE2",
-            "COMR",
-            "WCOM",
-            "TCOM",
-            "TIT1",
-            "TPE3",
-            "WCOP",
-            "TCOP",
-            "TDAT",
-            "TOWN",
-            "IPLS",
-            "TEXT",
-            "TPE1",
-            "MCDI",
-            "TOAL",
-            "TOPE",
-            "TOFN",
-            "TOLY",
-            "TORY",
-            "OWNE",
-            "WPAY",
-            "PCNT",
-            "POPM",
-            "TPUB",
-            "TRDA",
-            "TSIZ",
-            "TIT3",
-            "USER",
-            "TIME",
-            "TIT2",
-            "UFID",
-            "TYER",
-            "TXXX"
+         "TALB",
+         "TPE2",
+         "COMR",
+         "WCOM",
+         "TCOM",
+         "TIT1",
+         "TPE3",
+         "WCOP",
+         "TCOP",
+         "TDAT",
+         "TOWN",
+         "IPLS",
+         "TEXT",
+         "TPE1",
+         "MCDI",
+         "TOAL",
+         "TOPE",
+         "TOFN",
+         "TOLY",
+         "TORY",
+         "OWNE",
+         "WPAY",
+         "PCNT",
+         "POPM",
+         "TPUB",
+         "TRDA",
+         "TSIZ",
+         "TIT3",
+         "USER",
+         "TIME",
+         "TIT2",
+         "UFID",
+         "TYER",
+         "TXXX"
     };
 
     public static String[] frameName = new String[]{
-            "Album/Movie/Show title",
-            "Band/orchestra/accompaniment",
-            "Commercial frame",
-            "Commercial information (UnEditable)",
-            "Composer",
-            "Content group description",
-            "Conductor/performer refinement",
-            "Copyright/Legal information",
-            "Copyright message",
-            "Date (Format DDMM)",
-            "File owner/licensee",
-            "Involved people list",
-            "Lyricist/Text writer",
-            "Lead performer(s)/Soloist(s)",
-            "Music CD identifier",
-            "Original album/movie/show title",
-            "Original artist(s)/performer(s)",
-            "Original filename",
-            "Original lyricist(s)/text writer(s)",
-            "Original release year",
-            "Ownership frame",
-            "Payment",
-            "Play counter",
-            "Popularimeter",
-            "Publisher",
-            "Recording dates",
-            "Size",
-            "Subtitle/Description refinement",
-            "Terms of use",
-            "Time (Format HHMM)",
-            "Title/songname/content description",
-            "Unique file identifier",
-            "Year"
+        "Album/Movie/Show title",
+        "Band/orchestra/accompaniment",
+        "Commercial frame",
+        "Commercial information (UnEditable)",
+        "Composer",
+        "Content group description",
+        "Conductor/performer refinement",
+        "Copyright/Legal information",
+        "Copyright message",
+        "Date (Format DDMM)",
+        "File owner/licensee",
+        "Involved people list",
+        "Lyricist/Text writer",
+        "Lead performer(s)/Soloist(s)",
+        "Music CD identifier",
+        "Original album/movie/show title",
+        "Original artist(s)/performer(s)",
+        "Original filename",
+        "Original lyricist(s)/text writer(s)",
+        "Original release year",
+        "Ownership frame",
+        "Payment",
+        "Play counter",
+        "Popularimeter",
+        "Publisher",
+        "Recording dates",
+        "Size",
+        "Subtitle/Description refinement",
+        "Terms of use",
+        "Time (Format HHMM)",
+        "Title/songname/content description",
+        "Unique file identifier",
+        "Year"
     };
 
 
@@ -170,18 +164,37 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 //        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
         mainListView.setAdapter(arrAdapter);
 
-        if (savedInstanceState == null)
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.i("AlertZeek", "Inside Thread to load mp3 files");
 
-                mp3SongsList.addAll(scanForMp3());
+                ArrayList<String[]> arr = new ArrayList<String[]>();
+                Cursor list = getContentResolver().query(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        new String[]{ MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA},
+                        String.format("%s!=0", MediaStore.Audio.Media.IS_MUSIC),
+                        null,
+                        null);
+
+                list.moveToFirst();
+                while(!list.isAfterLast()) {
+//            Log.i("ZeekMP3",String.format("Title=%s \n Data=%s",list.getString(0),list.getString(1)));
+                    arr.add(new String[]{list.getString(0), list.getString(1)});
+                    list.moveToNext();
+//            Log.i("ZeekMP3", String.format("Title=%s \n Data=%s", arr.get(i)[0], arr.get(i)[1
+                }
+
+                list.close();
+
+                mp3SongsList.addAll(arr);
+
 
                 mainListView.post(new Runnable() {
                     @Override
                     public void run() {
-                        ((ArrayAdapter)mainListView.getAdapter()).notifyDataSetChanged();
+                        mainListView.deferNotifyDataSetChanged();
                     }
                 });
                 Log.i("AlertZeek", "made");
@@ -224,62 +237,9 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         mainMenu = menu;
 
         menu.findItem(R.id.item_more).setVisible(false);
-        menu.findItem(R.id.item_commitChanges).setVisible(false);
+        menu.findItem(R.id.item_save).setVisible(false);
 
         return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Log.i("AlertZeek","optionButton clicked id = " + item.getTitle());
-
-        switch (item.getItemId()){
-            case (R.id.item_refresh):
-
-                Log.i("AlertZeek","refresh button clicked");
-                if (mainListView.getVisibility() == View.VISIBLE){
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.i("AlertZeek", "Inside Thread to load mp3 files");
-
-                            mp3SongsList.addAll(scanForMp3());
-
-                            mainListView.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((ArrayAdapter)mainListView.getAdapter()).notifyDataSetChanged();
-                                }
-                            });
-                            Log.i("AlertZeek", "made");
-                        }
-                    }).start();
-                }else{
-
-                }
-            break;
-            case (R.id.item_onlyExistingFrames):
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int i =0; i < tagList.size(); i++){
-                            if (tagList.get(i).framePostion == -1){
-                                tagList.remove(i);
-                                i--;
-                            }
-                        }
-                        listViewSecond.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                ((ArrayAdapter)listViewSecond.getAdapter()).notifyDataSetChanged();
-                            }
-                        });
-                    }
-                }).start();
-            break;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     public static void callDialogBox(int position, int option){
@@ -292,7 +252,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         frag.show(((Activity) context).getFragmentManager(), "ManagerZeek");
     }
 
-
+/*
 
     public ArrayList<String []> scanForMp3(){
         Log.i("AlertZeek","inside scanForMp3 in MainActivity");
@@ -317,7 +277,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         return arr;
     }
 
-
+*/
 
 
     public static void buttonPressed_loadDetailView(final View rowView){
@@ -325,10 +285,10 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         Log.i("AlertZeek", "inside buttonPressed of MainActivity");
 
 
-//        tagList.clear();
-//        for (int i =0; i < frameName.length; i++) {
-//            tagList.add(new frameObject(supportedID3Frames[i],frameName[i],-1,null));
-//        }
+        tagList.clear();
+        for (int i =0; i < frameName.length; i++) {
+            tagList.add(new frameObject(0,null));
+        }
 
         if (fileRead(mp3SongsList.get(rowView.getId())[1]) == true) {
 
@@ -357,8 +317,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
                     Log.i("AlertZeek", "inside onClick to reach back to mp3List");
 
-
-
                     mainListView.setVisibility(View.VISIBLE);
 
                     Animation DetailListAnim = new AnimationUtils().loadAnimation(context, R.anim.remove_details_anim);
@@ -382,11 +340,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                             mainListView.setEnabled(true);
                             tagList.clear();
                             mainMenu.findItem(R.id.item_more).setVisible(false);
-                            mainMenu.findItem(R.id.item_commitChanges).setVisible(false);
-                            tagList.clear();
-                            for (int i =0; i < frameName.length; i++) {
-                                tagList.add(new frameObject(supportedID3Frames[i],frameName[i],-1,null));
-                            }
+                            mainMenu.findItem(R.id.item_save).setVisible(false);
                         }
                     }, 500);
                 }
@@ -433,7 +387,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                 public void run() {
                     mainListView.setVisibility(View.INVISIBLE);
                     mainMenu.findItem(R.id.item_more).setVisible(true);
-                    mainMenu.findItem(R.id.item_commitChanges).setVisible(true);
+                    mainMenu.findItem(R.id.item_save).setVisible(true);
                 }
             }, 500);
 
@@ -445,37 +399,37 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
 
 
-    public static boolean fileRead (String address){
+public static boolean fileRead (String address){
 
-        Log.i("AlertZeek","Inside fileRead of MainActivity with address " + address);
-        File fileToRead = new File(address);
-        InputStream streamInput = null;
-        boolean flag = false;
-        byte[] bytesRead = new byte[3] ;
-        int numberOfBytes;
-        char[] readString;
-        int i ;
-        try{
-            streamInput = new BufferedInputStream( new FileInputStream(address) ) ;
-            streamInput.read(bytesRead, 0, 3);
-            if ((new String(bytesRead)).substring(0,3).compareTo("ID3") == 0){
-                Log.i("AlertZeek","Contains compatible ID3 data --" + (new String(bytesRead)).substring(0,3));
-                flag =true;
-                readID3Tags(new BufferedInputStream( new FileInputStream(address) ) );
-            }
-            else{
-                Log.i("AlertZeek","Contains IN-compatible ID3 data --"+ (new String(bytesRead)).substring(0,3));
-                flag = false;
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+    Log.i("AlertZeek","Inside fileRead of MainActivity with address " + address);
+    File fileToRead = new File(address);
+    InputStream streamInput = null;
+    boolean flag = false;
+    byte[] bytesRead = new byte[3] ;
+    int numberOfBytes;
+    char[] readString;
+    int i ;
+    try{
+        streamInput = new BufferedInputStream( new FileInputStream(address) ) ;
+        streamInput.read(bytesRead, 0, 3);
+        if ((new String(bytesRead)).substring(0,3).compareTo("ID3") == 0){
+            Log.i("AlertZeek","Contains compatible ID3 data --" + (new String(bytesRead)).substring(0,3));
+            flag =true;
+            readID3Tags(new BufferedInputStream( new FileInputStream(address) ) );
+        }
+        else{
+            Log.i("AlertZeek","Contains IN-compatible ID3 data --"+ (new String(bytesRead)).substring(0,3));
+            flag = false;
         }
 
-        return flag;
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+
+    return flag;
+}
 
 
 
@@ -548,8 +502,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             if ( frameIndex != -1){
                 byte[] frameDescription = new byte[(int) frameSize];
 
-                tagList.get(frameIndex).framePostion = goneThruoghBytes;
-                tagList.get(frameIndex).frameDetail = "";
+                tagList.set(frameIndex,new frameObject(goneThruoghBytes,""));
                 goneThruoghBytes += inStream.read(frameDescription);
                 parseFrame (new String(frameID),frameSize,frameDescription,frameIndex);
 
@@ -570,12 +523,12 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         Log.i("AlertZeek","FrameID encountered is = " + IDToCompare);
         for (int i =0; i < supportedID3Frames.length; i++){
             if (supportedID3Frames[i].compareTo(IDToCompare) == 0){
-                if ( ((frameFlags & (1<<7)) | (frameFlags & (1<<6))) == 0) {
-                    Log.i("AlertZeek","Frame is supported");
-                    return i;
-                }else{
-                    Log.i("AlertZeek","Compressed or encrypted frame");
-                }
+               if ( ((frameFlags & (1<<7)) | (frameFlags & (1<<6))) == 0) {
+                   Log.i("AlertZeek","Frame is supported");
+                   return i;
+               }else{
+                Log.i("AlertZeek","Compressed or encrypted frame");
+               }
             }
         }
         return -1;
@@ -590,8 +543,8 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             Log.i("AlertZeek", "Reading "+ frameID + " frame");
         }
         if(frameID.charAt(0) == 'T') {
-            Log.i("AlertZeek", "Reading " + frameID + " frame");
-            tagList.get(frameIndex).frameDetail = textInformationParser(frameDescription);
+            Log.i("AlertZeek", "Reading "+ frameID + " frame");
+            tagList.set(frameIndex,new frameObject(tagList.get(frameIndex).framePostion,textInformationParser(frameDescription)));
         }
 
     }
@@ -751,3 +704,55 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 ////            mainTableRow.addView(txView);
 ////            mainTableRow.addView(btn);
 //            mainTable.addView(mainTableRow);
+//
+iff --git a/app/src/main/java/com/wordpress/zubeentolani/arjayv010/detail_list_class.java b/app/src/main/java/com/wordpress/zubeentolani/arjayv010/detail_list_class.java
+ndex bf7b6c9..15efccf 100644
+-- a/app/src/main/java/com/wordpress/zubeentolani/arjayv010/detail_list_class.java
+++ b/app/src/main/java/com/wordpress/zubeentolani/arjayv010/detail_list_class.java
+@@ -64,21 +64,24 @@ public class detail_list_class extends ArrayAdapter {
+         final ImageView imageView = (ImageView)rowView.findViewById(R.id.detail_list_view_rwImageView);
+         final TextView detailTextView = (TextView) rowView.findViewById(detail_list_view_rwDetailTextView);
+ 
+-        rowView.setTag("rowView");
+ 
++        //rowView.setId(n);
++        Log.i("AlertZeek", "index = " + n + " name = " + strings.get(n).frameName + " id " + strings.get(n).frameID );
++        imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_" + strings.get(n).frameName.substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
++        Log.i("AlertZeek", "index = " + n + " id = " + strings.get(n).frameID);
++        rwTextView.setText(strings.get(n).frameName);
+ 
+-        rowView.setId(n);
+-        imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_" + MainActivity.frameName[n].substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
+-        rwTextView.setText(MainActivity.frameName[n]);
+-
+-        if (strings.get(n).frameDetail == null) {
++        if (strings.get(n).framePostion == -1) {
+             detailTextView.setText("This frame dose not exist in the file");
++            Log.i("AlertZeek", "1");
+         }else if (strings.get(n).frameDetail.compareTo("") == 0) {
+             detailTextView.setText("This frame is empty");
++            Log.i("AlertZeek", "2");
+         }else{
+             detailTextView.setText(strings.get(n).frameDetail);
++            Log.i("AlertZeek", "3");
+         }
+-
++        Log.i("AlertZeek","crossed = "+ n);
+ 
+ 
+ /*
+diff --git a/app/src/main/res/menu/menu_main.xml b/app/src/main/res/menu/menu_main.xml
+index a0b5607..d591c6e 100644
+--- a/app/src/main/res/menu/menu_main.xml
++++ b/app/src/main/res/menu/menu_main.xml
+@@ -8,8 +8,8 @@
+         android:title="Refresh"
+         android:showAsAction="always"/>
+ 
+-    <item android:id="@+id/item_save"
+-        android:title="Save"
++    <item android:id="@+id/item_commitChanges"
++        android:title="Commit changes"
+         android:showAsAction="always"/>
+ 
+     <item android:id="@+id/item_more"

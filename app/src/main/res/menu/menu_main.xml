@@ -8,8 +8,8 @@
         android:title="Refresh"
         android:showAsAction="always"/>
 
-    <item android:id="@+id/item_save"
-        android:title="Save"
+    <item android:id="@+id/item_commitChanges"
+        android:title="Commit changes"
         android:showAsAction="always"/>
 
     <item android:id="@+id/item_more"
