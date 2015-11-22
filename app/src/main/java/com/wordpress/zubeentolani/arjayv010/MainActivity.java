@@ -100,8 +100,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
     public static ArrayList<String[]> mp3SongsList = new ArrayList<String[]>() ;
     public static ArrayList<frameObject> tagList = new ArrayList<frameObject>() ;
 
-    public static String[] noString = {"Astr1","Hsrt2","Qstr3","Estr4","stRr5","Qstr6","dsrt7","sgtr8","astr9","sjtr10","rstr12","tsrt13","jstr14","pstr16","istr17","nstr18","gsrt19","str20","str21","str22","str23","srt24","str25","str26","str27","str28","srt29","str30","str31","str32"};
-
     public static String[] supportedID3Frames = new String[]{
             "TALB",
             "TPE2",
@@ -135,8 +133,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "TIME",
             "TIT2",
             "UFID",
-            "TYER",
-            "TXXX"
+            "TYER"
     };
 
     public static String[] frameName = new String[]{
@@ -190,11 +187,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-
         context = this;
-
         mainListView = (ListView) findViewById(R.id.Main_List_View);
         arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, mp3SongsList);
 //        arrAdapter = new customArrayAdapter(context, R.layout.mp3_list_view, noString,0);
@@ -206,21 +199,18 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             public void run() {
                 Log.i("AlertZeek", "Inside Thread to load mp3 files");
 
-                mp3SongsList.addAll(scanForMp3());
+                final ArrayList<String[]> arrayList = scanForMp3();
 
-                mainListView.post(new Runnable() {
+                MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        mp3SongsList.addAll(arrayList);
                         ((ArrayAdapter)mainListView.getAdapter()).notifyDataSetChanged();
                     }
                 });
                 Log.i("AlertZeek", "made");
             }
         }).start();
-
-
-
-
 
         Log.i("Function", "Inside onCreate of MainActivity - Array created");
         Log.i("Function", String.format("inside onCreate of MainActivity- id=%d", findViewById(R.id.Main_Frame_Layout).getId()));
@@ -230,8 +220,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 //        str.add(new String[]{noString[0]," "}) ;
 //        str.add(new String[]{noString[1]," "}) ;
 //        mainListView.deferNotifyDataSetChanged();
-
-
 
         Log.i("Function", "Inside onCreate of MainActivity - Adapter");
 
@@ -274,13 +262,14 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                         public void run() {
                             Log.i("AlertZeek", "Inside Thread to load mp3 files");
 
-                            ArrayList<String[]> tempList= scanForMp3();
-                            mp3SongsList.clear();
-                            mp3SongsList.addAll(tempList);
+                            final ArrayList<String[]> tempList= scanForMp3();
 
-                            mainListView.post(new Runnable() {
+
+                            MainActivity.this.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    mp3SongsList.clear();
+                                    mp3SongsList.addAll(tempList);
                                     ((ArrayAdapter)mainListView.getAdapter()).notifyDataSetChanged();
                                 }
                             });
@@ -297,6 +286,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
+
                             for (int i = 0; i < tagList.size(); i++) {
                                 if (tagList.get(i).framePosition == -1) {
                                     tagList.remove(i);
@@ -338,11 +328,16 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             break;
             case (R.id.item_commitChanges):
                 Log.i("AlertZeek","commitChanges button clicked");
+
                 item.setEnabled(false);
-                mainMenu.getItem(R.id.item_refresh).setEnabled(false);
+
+//                mainMenu.getItem(R.id.item_refresh).setEnabled(false);
+
+
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        Log.i("AlertZeek","thread started");
                         MainActivity.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -362,7 +357,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                             public void run() {
                                 Toast.makeText(context, "Changes committed", Toast.LENGTH_SHORT).show();
                                 item.setEnabled(true);
-                                mainMenu.getItem(R.id.item_refresh).setEnabled(true);
+//                                mainMenu.getItem(R.id.item_refresh).setEnabled(true);
                             }
                         });
                     }
@@ -380,22 +375,33 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         long readOpFrameSize = 0;
         long writeOpFrameSize = 0;
         byte [] sizeAndFlagsBuffer = new byte[6];
+        byte [] startPart = new byte[10];
 
         Log.i("AlertZeek","inside commitChangesToFiles toWrite length = " + toWrite.size());
         RandomAccessFile file = new RandomAccessFile(new File(fileAddress),"rw");
         RandomAccessFile writeFile = new RandomAccessFile(new File(getFilesDir(),"arjayTempFile.mp3"),"rw");
-
+//        Log.i("AlertZeek","mileStone 0");
         for (int i = 0 ; i < toWrite.size(); i++) {
+//            Log.i("AlertZeek","val of i  ="+i);
             if (toWrite.get(i).frameDataChanged != true) {
                 toWrite.remove(i);
                 i--;
             }
         }
+//        Log.i("AlertZeek","mileStone1");
         Collections.sort(toWrite);
+
+//        file.read(startPart);
+//        writeFile.write(startPart);
 
         for (frameObject obj:toWrite){
 
             Log.i("AlertZeek", "Frame postion=" + obj.framePosition + " frameID=" + obj.frameID);
+
+
+//            if (obj.framePosition == -1){
+//                writeFile.write(obj.frameID.getBytes());
+//            }
             for (;wroteTill <= obj.framePosition - 6  ; wroteTill++ ){
                 writeFile.write(file.readByte());
             }
@@ -449,6 +455,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         }
 
         Log.i("AlertZeek","Wrote all the frames");
+
         //Writing to temp file
         wroteTill += 700;
         byte[] buffer_here = new byte[700];
@@ -484,8 +491,8 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
 //                Log.i("AlertZeek", "Frame changed is = " + obj.frameID + " detail now = " + obj.frameDetail);
 //                file.seek((int) obj.framePosition - 4);
-////                byte [] buffer = new byte[4];
-////                file.read(buffer);
+//                byte [] buffer = new byte[4];
+//                file.read(buffer);
 //                int frameSize = 0;
 //
 //                frameSize |= ((long)file.read());
@@ -500,9 +507,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 //                frameSize |= ((long)file.read());
 //
 //                Log.i("AlertZeek"," size " + frameSize);
-
-
-
     }
 
     public static void callDialogBox(int position, int option){
@@ -547,7 +551,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
         Log.i("AlertZeek", "inside buttonPressed of MainActivity");
 
-
         tagList.clear();
         for (int i =0; i < frameName.length; i++) {
             tagList.add(new frameObject(supportedID3Frames[i],frameName[i],-1,null));
@@ -579,8 +582,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                 public void onClick(View btV) {
 
                     Log.i("AlertZeek", "inside onClick to reach back to mp3List");
-
-
 
                     mainListView.setVisibility(View.VISIBLE);
 
@@ -743,7 +744,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         if (extendedHeaderPresentBit != 0)
         {
             Log.i("AlertZeek","extended header IS present and tagSize = " + tagSize);
-
         }else{
             Log.i("AlertZeek","extended header NOT Present and tagSize = " + tagSize);
         }
@@ -784,9 +784,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
             } else{
                 goneThruoghBytes += inStream.skip( frameSize );
-
             }
-
         }
         inStream.close();
     }
@@ -797,6 +795,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
         String IDToCompare = new String(frameID);
         Log.i("AlertZeek","FrameID encountered is = " + IDToCompare);
+        if (IDToCompare != null)
         for (int i =0; i < supportedID3Frames.length; i++){
             if (supportedID3Frames[i].compareTo(IDToCompare) == 0){
                 if ( ((frameFlags & (1<<7)) | (frameFlags & (1<<6))) == 0) {
@@ -837,7 +836,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                 return new String(transformed);
             }
             else {
-                return null;
+                return "";
             }
 
         } else if (description[0] == 0) {
@@ -850,11 +849,10 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
                 }
                 return new String(transformed);
             } else {
-                return null;
+                return "";
             }
         }
         return null;
-
     }
 
 
@@ -873,7 +871,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         Log.i("AlertZeek","Dialog cancel click");
     }
 
-    //    void openUpDetails (View v){
+//        void openUpDetails (View v){
 //
 //        Log.i("Function", "Inside openDetails of MainActivity");
 //
@@ -893,29 +891,29 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
 
 
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//         Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_main, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//         Handle action bar item clicks here. The action bar will
+//         automatically handle clicks on the Home/Up button, so long
+//         as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//
+//        noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-    */
 }
 
 

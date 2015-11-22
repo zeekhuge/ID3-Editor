@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/item_refresh"
+        android:title="Refresh"
+        android:showAsAction="always"/>
+
+    <item android:id="@+id/item_commitChanges"
+        android:title="Add"
+        android:showAsAction="always"/>
+
+    <item android:id="@+id/item_delete"
+        android:title="Delete"
+        android:enabled="false"
+        android:showAsAction="always">
+    </item></menu>

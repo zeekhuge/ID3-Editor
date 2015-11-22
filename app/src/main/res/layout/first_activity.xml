@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+    android:id="@+id/ImageView_Arjay"
+    android:layout_gravity="center_horizontal"
+    android:layout_margin="50dp"
+    android:layout_width="300dp"
+    android:layout_height="300dp"
+    android:background="@drawable/_a"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/TextView_net"
+        android:enabled="false"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="30dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="90dp"
+        android:background="#ff00ff"
+        android:text="Click to scan cloud"/>
+    <!--<corners android:bottomRightRadius="20dp"-->
+        <!--android:bottomLeftRadius="20dp"-->
+        <!--android:topLeftRadius="20dp"-->
+        <!--android:topRightRadius="20dp"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content" />-->
+
+
+
+    <TextView
+        android:layout_below="@+id/TextView_net"
+        android:id="@+id/TextView_local"
+        android:enabled="false"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="30dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="70dp"
+        android:background="#ff00ff"
+
+        android:text="Click to scan local device"/>
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:layout_centerInParent="true"
+        android:visibility="invisible"/>
+
+    </RelativeLayout>
+</LinearLayout>
