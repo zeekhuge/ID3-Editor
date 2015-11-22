@@ -7,7 +7,8 @@
 
     <item android:id="@+id/item_commitChanges"
         android:title="Commit changes"
-        android:showAsAction="always"/>
+        android:showAsAction="always"
+        android:enabled="false"/>
 
     <item android:id="@+id/item_more"
         android:title="More"
