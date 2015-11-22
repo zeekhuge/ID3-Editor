@@ -4,12 +4,16 @@
         android:title="Refresh"
         android:showAsAction="always"/>
 
-    <item android:id="@+id/item_commitChanges"
+    <item android:id="@+id/item_add"
         android:title="Add"
         android:showAsAction="always"/>
 
     <item android:id="@+id/item_delete"
         android:title="Delete"
-        android:enabled="false"
-        android:showAsAction="always">
-    </item></menu>
+        android:showAsAction="always"/>
+    <item android:id="@+id/item_cancel"
+        android:title="Cancel"
+        android:showAsAction="always"
+        android:visible="false"/>
+
+    </menu>

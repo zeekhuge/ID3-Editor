@@ -99,12 +99,12 @@ public class FirstActivity extends Activity {
                         ParseQuery<ParseUser> query = ParseQuery.getQuery("ID3tags");
                         query.selectKeys(Arrays.asList("FileName"));
                         query.orderByAscending("FileName");
-                        Log.i("AlertZeek", "Returned from query");
                         try {
                             gotData = query.find();
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
+                        Log.i("AlertZeek", "Returned from query");
                         final ArrayList<String> arrayList = new  ArrayList<String>();
                         arrayList.clear();
                         for (ParseObject obj:gotData){
