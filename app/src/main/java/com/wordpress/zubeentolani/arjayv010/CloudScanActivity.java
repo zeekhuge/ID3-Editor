@@ -556,5 +556,10 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
     public void onDialogCancelClick() {
 
     }
+
+    @Override
+    public void prepareBtnClick(int frameIndex) {
+
+    }
 }
 

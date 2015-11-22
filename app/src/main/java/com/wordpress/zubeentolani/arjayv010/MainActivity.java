@@ -104,7 +104,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "TALB",
             "TPE2",
             "COMR",
-            "WCOM",
             "TCOM",
             "TIT1",
             "TPE3",
@@ -112,7 +111,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "TCOP",
             "TDAT",
             "TOWN",
-            "IPLS",
             "TEXT",
             "TPE1",
             "MCDI",
@@ -121,7 +119,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "TOFN",
             "TOLY",
             "TORY",
-            "OWNE",
             "WPAY",
             "PCNT",
             "POPM",
@@ -129,18 +126,16 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "TRDA",
             "TSIZ",
             "TIT3",
-            "USER",
             "TIME",
             "TIT2",
-            "UFID",
-            "TYER"
+            "TYER",
+            "TXXX"
     };
 
     public static String[] frameName = new String[]{
             "Album/Movie/Show title",
             "Band/orchestra/accompaniment",
             "Commercial frame",
-            "Commercial information (UnEditable)",
             "Composer",
             "Content group description",
             "Conductor/performer refinement",
@@ -148,7 +143,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "Copyright message",
             "Date (Format DDMM)",
             "File owner/licensee",
-            "Involved people list",
             "Lyricist/Text writer",
             "Lead performer(s)/Soloist(s)",
             "Music CD identifier",
@@ -157,7 +151,6 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "Original filename",
             "Original lyricist(s)/text writer(s)",
             "Original release year",
-            "Ownership frame",
             "Payment",
             "Play counter",
             "Popularimeter",
@@ -165,11 +158,10 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "Recording dates",
             "Size",
             "Subtitle/Description refinement",
-            "Terms of use",
             "Time (Format HHMM)",
             "Title/songname/content description",
-            "Unique file identifier",
-            "Year"
+            "Year",
+            "Other data"
     };
 
 
@@ -513,8 +505,11 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
         Log.i("AlertZeek", "Calling DialogBox");
         DialogBox frag = new DialogBox();
 
-        if (option == 1) { //it is normal TEXT frame
+        if (option != 0) { //it is normal TEXT frame
             frag.setValues(frameName[position], tagList.get(position).frameDetail, position);
+        }
+        else {
+            frag.setValues(frameName[position], tagList.get(position).frameDetail, position,true);
         }
         frag.show(((Activity) context).getFragmentManager(), "ManagerZeek");
     }
@@ -571,8 +566,13 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Log.i("AlertZeek","Detail list click postition =" + position);
-                    callDialogBox(position,1);
+                    Log.i("AlertZeek", "Detail list click postition =" + position);
+                    if (tagList.get(position).frameID.compareTo("TXXX") == 0){
+                        callDialogBox(position,0);
+                    }else{
+                        callDialogBox(position,1);
+                    }
+
                 }
             });
 
@@ -746,6 +746,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             Log.i("AlertZeek","extended header IS present and tagSize = " + tagSize);
         }else{
             Log.i("AlertZeek","extended header NOT Present and tagSize = " + tagSize);
+
         }
 
         while(goneThruoghBytes < tagSize){
@@ -814,14 +815,18 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
     public static void  parseFrame (String frameID, long frameSize,  byte[] frameDescription, int frameIndex){
 
         Log.i("AlertZeek", "frame ID is = " + new String(frameID) + " frame size is = " + frameSize + " frame description = " + frameDescription);
-        if(frameID.compareTo("TXXX") == 0) {
-            Log.i("AlertZeek", "Reading "+ frameID + " frame");
+
+        if (frameID.compareTo("TXXX") == 0){
+            tagList.get(frameIndex).frameDetail = new String(frameDescription);
         }
         else if(frameID.charAt(0) == 'T') {
             Log.i("AlertZeek", "Reading " + frameID + " frame");
             tagList.get(frameIndex).frameDetail = textInformationParser(frameDescription);
         }
+
+
     }
+
 
     public static String textInformationParser (byte[] description) {
 
@@ -868,7 +873,76 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
 
     @Override
     public void onDialogCancelClick() {
-        Log.i("AlertZeek","Dialog cancel click");
+        Log.i("AlertZeek", "Dialog cancel click");
+    }
+
+
+//  Sequence is as <itIs><><lyricsQuality><><popularityMark><><blacklistCount><>
+    @Override
+    public void prepareBtnClick(int frameIndex) {
+        byte [] rj = new String("arjayMade").getBytes();
+        byte [] byteToWrite = new byte[new String("arjayMade<><><><>").getBytes().length + 2];
+        byte [] data = new String("<><><><>").getBytes();
+        int i=0;Log.i("AlertZeek","inside TXXX_seperate");
+        byteToWrite[0] = 0;
+        for (i=0; i < rj.length; i++){
+            byteToWrite[1+i] = rj[i];
+        }
+        byteToWrite[i+1]=0;
+        for (int k=0; k < data.length; k++){
+            byteToWrite[i+2+k] = data[k];
+        }
+
+        tagList.get(frameIndex).frameDetail = new String(byteToWrite);
+        callDialogBox(frameIndex,0);
+    }
+
+
+    public static byte[][] TXXX_seperate(byte[] frameDescription){
+
+        Log.i("AlertZeek","inside TXXX_seperate");
+        byte encoding = (byte) frameDescription[0];
+        Log.i("AlertZeek","encoding = "+ encoding);
+
+        if (encoding ==1 || encoding==0) {
+
+            int i = 0;
+            int len  =0;
+            int offset = 0;
+            if (encoding == 1) {
+                for (i = 1; i < frameDescription.length; i += 2) {
+                    if (frameDescription[i] == 0) {
+                        break;
+                    }
+                }
+                len = frameDescription.length - i-1;
+                offset = 2;
+            } else if (encoding == 0) {
+                for (i = 1; i < frameDescription.length; i += 1) {
+                    if (frameDescription[i] == 0) {
+                        break;
+                    }
+                }
+                len = frameDescription.length - i;
+                offset = 1;
+            }
+
+            byte[] transformed1 = new byte[i];
+            transformed1[0] = encoding;
+            for (int k = 1; k < i; k++) {
+                transformed1[k] = frameDescription[k];
+            }
+            byte[] transformed2 = new byte[len];
+            transformed2[0] = encoding;
+            for (int k = i + offset; k < frameDescription.length; k++) {
+                transformed2[k - offset -i +1] = frameDescription[k];
+            }
+            return new byte[][]{transformed1,transformed2};
+
+        }else {
+            return null;
+        }
+
     }
 
 //        void openUpDetails (View v){

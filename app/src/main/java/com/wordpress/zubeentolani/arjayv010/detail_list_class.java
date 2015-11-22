@@ -64,6 +64,21 @@ public class detail_list_class extends ArrayAdapter {
         final ImageView imageView = (ImageView)rowView.findViewById(R.id.detail_list_view_rwImageView);
         final TextView detailTextView = (TextView) rowView.findViewById(detail_list_view_rwDetailTextView);
 
+        String parsedData = null;
+        if(strings.get(n).frameID.compareTo("TXXX") == 0) {
+            Log.i("AlertZeek", "Reading " + strings.get(n).frameID+ " frame");
+
+            byte[] frameDescription = strings.get(n).frameDetail.getBytes();
+            byte[][] bt = MainActivity.TXXX_seperate(frameDescription);
+            if (bt == null){
+                parsedData = "UnsupportedFormat";
+            }
+            else{
+                parsedData = "Description:"+ MainActivity.textInformationParser(bt[0]) + " Values:" + MainActivity.textInformationParser(bt[1]);
+            }
+        }
+
+
 
         //rowView.setId(n);
 //        Log.i("AlertZeek", "index = " + n + " name = " + strings.get(n).frameName + " id " + strings.get(n).frameID );
@@ -83,6 +98,10 @@ public class detail_list_class extends ArrayAdapter {
         }else{
             detailTextView.setText(strings.get(n).frameDetail);
 //            Log.i("AlertZeek", "3");
+        }
+
+        if (parsedData != null){
+            detailTextView.setText(parsedData);
         }
 //        Log.i("AlertZeek","crossed = "+ n);
 

@@ -14,8 +14,14 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 
 /**
  * Created by zeekhuge on 20/11/15.
@@ -26,11 +32,15 @@ public class DialogBox extends DialogFragment {
     int frameIndex;
     String title = null;
     String editTextString = null;
-
+    String descriptionString = null;
+    String valueString = null;
+    boolean isTXXX ;
+    boolean isTXXXstate;
 
     public interface DialogBoxListner{
         public void onDialogSaveClick(int position, String frameDetail);
         public void onDialogCancelClick();
+        public void prepareBtnClick(int frameIndex);
     }
 
 
@@ -40,40 +50,107 @@ public class DialogBox extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
+        AlertDialog.Builder builder = null;
+        View view = null;
+
         Log.i("AlertZeek","inside onCreateDialog");
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View view =inflater.inflate(R.layout.dialog_box_layout, null);
-        final TextView textView= (TextView) view.findViewById(R.id.dialog_box_titleView);
-        final EditText editText= (EditText) view.findViewById(R.id.dialog_box_editText);
+
+        if (isTXXXstate) {
+            Log.i("AlertZeek", "is in TXXXstate");
+            view = inflater.inflate(R.layout.isintxxxstate_dialog_box_layout,null);
+            final Spinner spinnerIts = (Spinner) view.findViewById(R.id.spinner_itIs);
+            final Spinner spinnerLyricsQuality = (Spinner) view.findViewById(R.id.spinner_lyricsQuality);
+            final Spinner spinnerPopularityMark = (Spinner) view.findViewById(R.id.spinner_popularityMark);
+
+            ArrayAdapter<String>Its = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item,new String[]{"Gazal","DanceNumber","PerkySong","DevotionalSong","Advertisement","DevotionalSong"});
+            ArrayAdapter<String>Lyrics = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item,new String[]{"Excellent","Good","Bad","Very Bad"});
+            ArrayAdapter<Integer>Popularity=new ArrayAdapter<Integer>(getActivity(),android.R.layout.simple_spinner_item,new Integer[]{1,2,3,4,5,6,7,8,9,10});
+
+            spinnerIts.setAdapter(Its);
+            spinnerLyricsQuality.setAdapter(Lyrics);
+            spinnerPopularityMark.setAdapter(Popularity);
+
+            builder = new AlertDialog.Builder(getActivity());
+
+        }
+
+        else if (isTXXX) {
+
+            Log.i("AlertZeek", "isTXXX");
+
+            view = inflater.inflate(R.layout.txxx_dialog_box_layout, null);
+            final TextView textView = (TextView) view.findViewById(R.id.dialog_box_titleView);
+            final EditText editText1 = (EditText) view.findViewById(R.id.dialog_box_editText1);
+            final EditText editText2 = (EditText) view.findViewById(R.id.dialog_box_editText2);
+            final Button btn = (Button) view.findViewById(R.id.dialog_box_button);
 
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
-                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String str = editText.getText().toString();
-                        if (str.compareTo(editTextString) != 0){
-                            dialogBoxListner.onDialogSaveClick(frameIndex,str );
+            editText1.setText(this.descriptionString);
+            editText2.setText(this.valueString);
+            textView.setText(title);
+
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialogBoxListner.prepareBtnClick(frameIndex);
+                }
+            });
+            builder = new AlertDialog.Builder(getActivity())
+                    .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String str = editText1.getText().toString();
+                            if (str.compareTo(editTextString) != 0) {
+                                dialogBoxListner.onDialogSaveClick(frameIndex, str);
+                            }
                         }
 
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialogBoxListner.onDialogCancelClick();
-                    }
-                });
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialogBoxListner.onDialogCancelClick();
+                        }
+                    });
+
+            Log.i("AlertZeek", "isTXXX");
+        }else {
+            view= inflater.inflate(R.layout.dialog_box_layout, null);
+            final TextView textView = (TextView) view.findViewById(R.id.dialog_box_titleView);
+            final EditText editText = (EditText) view.findViewById(R.id.dialog_box_editText);
+
+            editText.setText(editTextString);
+            textView.setText(title);
+
+             builder = new AlertDialog.Builder(getActivity())
+                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                     @Override
+                     public void onClick(DialogInterface dialog, int which) {
+                         String str = editText.getText().toString();
+                         if (str.compareTo(editTextString) != 0) {
+                             dialogBoxListner.onDialogSaveClick(frameIndex, str);
+                         }
+                     }
+
+                 })
+                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                     @Override
+                     public void onClick(DialogInterface dialog, int which) {
+                         dialogBoxListner.onDialogCancelClick();
+                     }
+                 });
+
+        }
 
 
 
-        textView.setText(title);
-        editText.setText(editTextString);
+            builder.setView(view);
 
-        builder.setView(view);
+            return builder.create();
 
-        return builder.create();
+
     }
 
 
@@ -105,5 +182,32 @@ public class DialogBox extends DialogFragment {
         this.editTextString = editTextString;
         this.title = "Edit " + title + " tag";
         this.frameIndex = frameIndex;
+        this.isTXXX = false;
+
+    }
+
+    public void setValues(String title, String editTextString, int frameIndex, boolean isTXXX){
+        Log.i("AlertZeek","inside setValues");
+
+        byte[][] bt = MainActivity.TXXX_seperate(editTextString.getBytes());
+        if (bt != null) {
+
+            this.descriptionString = MainActivity.textInformationParser(bt[0]);
+            this.valueString = MainActivity.textInformationParser(bt[1]);
+            Log.i("AlertZeek","des="+this.descriptionString+" val="+valueString);
+            if (this.descriptionString.contains("arjayMade")){
+                this.isTXXXstate = true;
+            }else {
+                this.isTXXXstate = false;
+            }
+        }else {
+            Log.i("AlertZeek","bt null");
+            this.descriptionString = "Encoding unsupported";
+            this.valueString = "Encoding unsupported";
+            this.isTXXXstate = true;
+        }
+        this.title = "Edit " + title + " tag";
+        this.frameIndex = frameIndex;
+        this.isTXXX = isTXXX;
     }
 }
