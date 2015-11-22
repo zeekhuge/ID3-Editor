@@ -1,13 +1,11 @@
 package com.wordpress.zubeentolani.arjayv010;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
@@ -19,11 +17,9 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.wordpress.zubeentolani.arjayv010.CloudScanCustmArrayAdapter;
 import java.util.ArrayList;
 
 /*
@@ -66,7 +62,7 @@ public class CloudScanActivity extends Activity {
                         }
                     }
                 }else{
-
+                    openUpDetails(view);
                 }
             }
         });
@@ -223,7 +219,7 @@ public class CloudScanActivity extends Activity {
 
 
 //        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context,android.R.layout.simple_list_item_1,noString);
-
+        columnDataList.add("hey");
         ColumnData arrayAdapter = new ColumnData(this, R.layout.detail_list_view, columnDataList);
         listView.setAdapter(arrayAdapter);
         listView.setVisibility(View.VISIBLE);
@@ -236,8 +232,7 @@ public class CloudScanActivity extends Activity {
             @Override
             public void run() {
                 mainListView.setVisibility(View.INVISIBLE);
-                mainMenu.findItem(R.id.item_more).setVisible(true);
-                mainMenu.findItem(R.id.item_commitChanges).setVisible(true);
+
             }
         }, 500);
 
