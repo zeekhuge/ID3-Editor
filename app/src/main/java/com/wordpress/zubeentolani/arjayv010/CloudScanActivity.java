@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import com.parse.DeleteCallback;
 import com.parse.GetCallback;
+import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -31,12 +32,10 @@ import com.parse.SaveCallback;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-/*
- * Failed to analyse overrides
- */
 
 
 
@@ -44,8 +43,9 @@ import java.util.List;
 public class CloudScanActivity extends Activity implements DialogBox.DialogBoxListner {
     public static ArrayList<String> fileNameList;
     public static ArrayList<Integer> selectedList= new ArrayList<Integer>();
-    public int objectId;
+    public String objectId = "";
     public String fileNametoWrite;
+    public ParseObject parseobject;
 
     ArrayList<String> columnDataList = new ArrayList<String>();
     ListView mainListView,secondListView;
@@ -79,6 +79,7 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
                         }
                     }
                 } else {
+                    Log.i("AlertZeekCloudScan", "clicked to view details");
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -88,9 +89,14 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
                                 e.printStackTrace();
                                 handleParseExceptions(e.getCode());
                             }
-                            openUpDetails(view);
+                            CloudScanActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    openUpDetails(view);
+                                }
+                            });
                         }
-                    });
+                    }).start();
                 }
             }
         });
@@ -170,7 +176,7 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
                     mainMenu.findItem(R.id.item_refresh).setVisible(true);
                     mainMenu.findItem(R.id.item_cancel).setVisible(false);
                 }
-                objectId = -1;
+                objectId = "";
 
                 Log.i("AlertZeekCloudScan", "Calling DialogBox");
 
@@ -181,13 +187,34 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
             break;
 
             case R.id.item_delete:
-
-
                 if (selectedList.size() > 0) {
+
+                    final ArrayList<Integer> arrLst = (ArrayList<Integer>) selectedList.clone();
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            for (final int n : arrLst) {
+                                try {
+                                    if(n != -1)
+                                    deleteFileFromBase(fileNameList.get(n));
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                    handleParseExceptions(e.getCode());
+                                }
+                            }
+                            reloadFileNameList();
+                        }
+                    }).start();
+
                     selectedList.clear();
                     ((ArrayAdapter)mainListView.getAdapter()).notifyDataSetChanged();
                     CloudScanActivity.this.mainMenu.findItem(R.id.item_refresh).setVisible(true);
                     CloudScanActivity.this.mainMenu.findItem(R.id.item_cancel).setVisible(false);
+
+                }else{
+                    Toast.makeText(CloudScanActivity.this, "Select some files first", Toast.LENGTH_SHORT).show();
                 }
             break;
 
@@ -197,7 +224,7 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
                     public void run() {
                         writeFileColumnData((ArrayList<String>) columnDataList.clone(), fileNametoWrite);
                     }
-                });
+                }).start();
                 item.setEnabled(false);
             break;
 
@@ -223,13 +250,14 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
         arrayList.clear();
         for (ParseObject obj:gotData){
             arrayList.add(obj.getString("FileName"));
+            Log.i("AlertZeekCloudScan", "strings = " + obj.getString("FileName"));
         }
 
         CloudScanActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 fileNameList.clear();
-                fileNameList = (ArrayList<String>) arrayList.clone();
+                fileNameList.addAll((Collection<? extends String>) arrayList.clone());
                 ((ArrayAdapter)mainListView.getAdapter()).notifyDataSetChanged();
                 arrayList.clear();
                 Toast.makeText(CloudScanActivity.this,"Data refreshed",Toast.LENGTH_SHORT).show();
@@ -248,17 +276,24 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
         Log.i("AlertZeek", "Returned from query");
         final ArrayList<String> arrayList = new  ArrayList<String>();
         arrayList.clear();
-        objectId = obj.getInt("objectId");
+
+        objectId = obj.getObjectId();
+        Log.i("AlertZeek","objID ");
+        Log.i("AlertZeek","objID "+ objectId);
 
         for (String str: MainActivity.supportedID3Frames) {
             arrayList.add(obj.getString(str));
+            Log.i("AlertZeek", "text " +obj.getString(str));
         }
+
+        parseobject = obj;
 
         CloudScanActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 columnDataList.clear();
-                columnDataList = (ArrayList<String>) arrayList.clone();
+                columnDataList.addAll((Collection<? extends String>) arrayList.clone());
+                arrayList.clear();
             }
         });
     }
@@ -267,6 +302,10 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
     public void openUpDetails (final View rowView){
 
         Log.i("AlertZeekCloudScan", "inside openUpDetails");
+
+        if (rowView == null){
+            Log.i("AlertZeekCloudScan", "null in openUpDetails");
+        }
 
         mainMenu.findItem(R.id.item_commitChanges).setVisible(true);
         mainMenu.findItem(R.id.item_cancel).setVisible(false);
@@ -289,7 +328,7 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.i("AlertZeekCloudScan", "inside listView click on " + position);
                 DialogBox frag = new DialogBox();
-                frag.setValues(parent.getItemAtPosition(position).toString(), columnDataList.get(position), -1);
+                frag.setValues(parent.getItemAtPosition(position).toString(), columnDataList.get(position), position);
                 frag.show(CloudScanActivity.this.getFragmentManager(), "ManagerZeek");
             }
         });
@@ -385,24 +424,41 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
 
     public void writeFileColumnData(ArrayList<String> toWrite, String fileName){
 
+        ParseObject id3Tags;
         Log.i("AlertZeekCloudScan", "inside writeFileColumnData");
+        if (objectId.compareTo("") == 0) {
+             id3Tags = new ParseObject("ID3tags");
 
-            ParseObject id3Tags = new ParseObject("ID3tags");
             for (int i = 0; i < MainActivity.supportedID3Frames.length; i++) {
                 id3Tags.put(MainActivity.supportedID3Frames[i], toWrite.get(i));
             }
-            if (objectId == -1) {
-                id3Tags.put("FileName", fileName);
-            }else{
-                id3Tags.put("objectId",objectId);
+
+
+            Log.i("AlertZeekCloudScan", "objectId=-1");
+            id3Tags.put("FileName", fileName);
+        }else{
+            id3Tags = parseobject;
+
+            for (int i = 0; i < MainActivity.supportedID3Frames.length; i++) {
+                id3Tags.put(MainActivity.supportedID3Frames[i], toWrite.get(i));
             }
+
+
+            Log.i("AlertZeekCloudScan", "objectId=-1");
+            id3Tags.put("FileName", fileName);
+
+                Log.i("AlertZeekCloudScan", "objectId=" + objectId);
+//                id3Tags.setObjectId(objectId);
+        }
+
             id3Tags.saveInBackground(new SaveCallback() {
                 @Override
                 public void done(ParseException e) {
-                    if (e ==null) {
+                    if (e == null) {
                         Toast.makeText(CloudScanActivity.this, "Data saved on cloud", Toast.LENGTH_SHORT).show();
                         mainMenu.findItem(R.id.item_commitChanges).setEnabled(true);
-                    }else{
+                    } else {
+                        e.printStackTrace();
                         handleParseExceptions(e.getCode());
                     }
                 }
@@ -436,15 +492,17 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
         }
     }
 
-    public void deleteFileFromBase(String fileName){
-        ParseObject obj = new ParseObject("ID3tags");
-        obj.put("FileName",fileName);
-        obj.deleteEventually(new DeleteCallback() {
+    public void deleteFileFromBase(String fileName) throws ParseException {
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("ID3tags");
+        query.whereEqualTo("FileName", fileName);
+        ParseObject obj = query.getFirst();
+        obj.deleteInBackground(new DeleteCallback() {
             @Override
             public void done(ParseException e) {
-                if (e==null) {
-                    Toast.makeText(CloudScanActivity.this, "Object deleted",Toast.LENGTH_SHORT).show();
-                }else{
+                if (e == null) {
+                    Toast.makeText(CloudScanActivity.this, "Object deleted", Toast.LENGTH_SHORT).show();
+                } else {
                     e.printStackTrace();
                     handleParseExceptions(e.getCode());
                 }
@@ -454,22 +512,39 @@ public class CloudScanActivity extends Activity implements DialogBox.DialogBoxLi
     }
 
     @Override
-    public void onDialogSaveClick(int position, String textEntered) {
+    public void onDialogSaveClick(int position, final String textEntered) {
 
         Log.i("AlertZeekCloudScan", "inside onDialogSaveClick");
 
         if (textEntered == null || textEntered.compareTo("") == 0){
+            Log.i("AlertZeekCloudScan", "no textEntered");
             Toast.makeText(CloudScanActivity.this,"No text was entered",Toast.LENGTH_SHORT).show();
         }else {
+            Log.i("AlertZeekCloudScan", "text entered=" + textEntered);
             mainMenu.findItem(R.id.item_commitChanges).setEnabled(true);
             if (position == -1){
+                Log.i("AlertZeekCloudScan", "position=" + position);
                 fileNametoWrite = textEntered;
                 fileNameList.add(textEntered);
                 Collections.sort(fileNameList);
                 ((ArrayAdapter)mainListView.getAdapter()).notifyDataSetChanged();
+                Log.i("AlertZeekCloudScan", "number " + fileNameList.indexOf(textEntered));
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while(mainListView.getChildAt(fileNameList.indexOf(textEntered)) == null);
+                        CloudScanActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                openUpDetails(mainListView.getChildAt(fileNameList.indexOf(textEntered)));
+                            }
+                        });
 
-                openUpDetails(mainListView.getChildAt(fileNameList.indexOf(fileNameList)));
+                    }
+                }).start();
+
             }else{
+                Log.i("AlertZeekCloudScan", "position=" + position);
                 columnDataList.set(position,textEntered);
                 ((ArrayAdapter)secondListView.getAdapter()).notifyDataSetChanged();
                 Toast.makeText(CloudScanActivity.this,"Changes added to list",Toast.LENGTH_SHORT).show();
