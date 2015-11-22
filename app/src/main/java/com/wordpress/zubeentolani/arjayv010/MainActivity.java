@@ -867,7 +867,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
     }
 
     @Override
-    public void onDialogCancelClick(int position) {
+    public void onDialogCancelClick() {
         Log.i("AlertZeek","Dialog cancel click");
     }
 

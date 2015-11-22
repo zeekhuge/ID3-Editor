@@ -11,9 +11,16 @@
     <item android:id="@+id/item_delete"
         android:title="Delete"
         android:showAsAction="always"/>
+
     <item android:id="@+id/item_cancel"
         android:title="Cancel"
         android:showAsAction="always"
         android:visible="false"/>
 
-    </menu>
+    <item android:id="@+id/item_commitChanges"
+        android:title="Commit Changes"
+        android:showAsAction="always"
+        android:visible="false"/>
+
+
+</menu>

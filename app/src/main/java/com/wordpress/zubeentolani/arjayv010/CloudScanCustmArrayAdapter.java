@@ -32,7 +32,7 @@ public class CloudScanCustmArrayAdapter
         LinearLayout linearLayout = (LinearLayout)view2.findViewById(R.id.mp3_list_view_topLinearLay);
         TextView textView = (TextView)view2.findViewById(R.id.mp3_list_view_rwTextView);
         ImageView imageView = (ImageView)view2.findViewById(R.id.mp3_list_view_rwImageView);
-        linearLayout.removeViewAt(2);
+
         view2.setId(n);
         imageView.setImageResource(imageView.getContext().getResources().getIdentifier("_" + ((String)this.strings.get(n)).substring(0, 1).toLowerCase(), "drawable", imageView.getContext().getPackageName()));
 

@@ -30,8 +30,9 @@ public class DialogBox extends DialogFragment {
 
     public interface DialogBoxListner{
         public void onDialogSaveClick(int position, String frameDetail);
-        public void onDialogCancelClick(int position);
+        public void onDialogCancelClick();
     }
+
 
     DialogBoxListner dialogBoxListner;
 
@@ -61,7 +62,7 @@ public class DialogBox extends DialogFragment {
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        dialogBoxListner.onDialogCancelClick(frameIndex);
+                        dialogBoxListner.onDialogCancelClick();
                     }
                 });
 
