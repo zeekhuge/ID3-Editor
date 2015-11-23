@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -64,15 +65,88 @@ public class DialogBox extends DialogFragment {
             final Spinner spinnerLyricsQuality = (Spinner) view.findViewById(R.id.spinner_lyricsQuality);
             final Spinner spinnerPopularityMark = (Spinner) view.findViewById(R.id.spinner_popularityMark);
 
-            ArrayAdapter<String>Its = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item,new String[]{"Gazal","DanceNumber","PerkySong","DevotionalSong","Advertisement","DevotionalSong"});
-            ArrayAdapter<String>Lyrics = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item,new String[]{"Excellent","Good","Bad","Very Bad"});
-            ArrayAdapter<Integer>Popularity=new ArrayAdapter<Integer>(getActivity(),android.R.layout.simple_spinner_item,new Integer[]{1,2,3,4,5,6,7,8,9,10});
+            final String[] its = new String[1];
+            final String[] lyricsQuality = new String[1];
+            final int[] popularityMark = new int[1];
+
+
+            final ArrayAdapter<String>Its = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item,new String[]{"","Gazal","DanceNumber","PerkySong","DevotionalSong","Advertisement","DevotionalSong"});
+            final ArrayAdapter<String>Lyrics = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item,new String[]{"","Excellent","Good","Bad","Very Bad"});
+            final ArrayAdapter<Integer>Popularity=new ArrayAdapter<Integer>(getActivity(),android.R.layout.simple_spinner_item,new Integer[]{0,1,2,3,4,5,6,7,8,9,10});
 
             spinnerIts.setAdapter(Its);
             spinnerLyricsQuality.setAdapter(Lyrics);
             spinnerPopularityMark.setAdapter(Popularity);
 
-            builder = new AlertDialog.Builder(getActivity());
+            spinnerIts.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    its[0] = parent.getItemAtPosition(position).toString();
+                    Log.i("Alert","-----"+its[0]);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+
+            spinnerLyricsQuality.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    lyricsQuality[0] = parent.getItemAtPosition(position).toString();
+                    Log.i("Alert","-----"+lyricsQuality[0]);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+
+            spinnerIts.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                    popularityMark[0] = Integer.parseInt(parent.getItemAtPosition(position).toString());
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+
+
+
+            builder = new AlertDialog.Builder(getActivity())
+            .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    byte[] rj = new String("arjayMade").getBytes();
+                    byte[] finalString = new String("<"+its[0]+"><"+lyricsQuality+"><"+String.valueOf(popularityMark[0])+">").getBytes();
+                    byte[] bt = new byte[finalString.length + 2 + rj.length ];
+                    int i=0;
+                    bt[0] = 0;
+                    for (i=0; i < rj.length;i++){
+                        bt[i+1] = rj[i];
+                    }
+                    bt[i+1] = 0;
+                    for (int k=0; k< finalString.length; k++){
+                        bt[i+2+k] = finalString[k];
+                    }
+
+                     dialogBoxListner.onDialogSaveClick(frameIndex, new String(bt));
+
+                }
+
+            })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialogBoxListner.onDialogCancelClick();
+                        }
+                    });
 
         }
 
