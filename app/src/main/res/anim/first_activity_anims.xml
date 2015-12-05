@@ -2,23 +2,23 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android">
     <!--<rotate-->
         <!--android:duration="2000"-->
-        <!--android:fromDegrees="-90"-->
+        <!--android:fromDegrees="90"-->
         <!--android:pivotY="50%"-->
         <!--android:pivotX="0%"-->
         <!--android:toDegrees="0"/>-->
-    <!--<translate-->
-        <!--android:duration="1000"-->
-        <!--android:fromXDelta="0%"-->
-        <!--android:fromYDelta="0%"-->
-        <!--android:toXDelta="-100%p"-->
-        <!--android:toYDelta="0%"-->
-        <!--android:fillBefore="true"-->
-        <!--android:fillEnabled="true"-->
-        <!--android:interpolator="@android:interpolator/bounce"/>-->
+    <translate
+        android:duration="1000"
+        android:fromXDelta="-100%p"
+        android:fromYDelta="0%"
+        android:toXDelta="0%"
+        android:toYDelta="0%"
+        android:fillBefore="true"
+        android:fillEnabled="true"
+        android:interpolator="@android:interpolator/bounce"/>
 
-    <objectAnimator
-        android:propertyName="alpha"
-        android:duration="500"
-        android:valueTo="0"
-        android:valueType="intType"/>
+    <!--<objectAnimator-->
+        <!--android:propertyName="alpha"-->
+        <!--android:duration="500"-->
+        <!--android:valueTo="0"-->
+        <!--android:valueType="intType"/>-->
 </set>

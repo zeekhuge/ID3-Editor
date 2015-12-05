@@ -103,25 +103,25 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
     public static String[] supportedID3Frames = new String[]{
             "TALB",
             "TPE2",
-            "COMR",
+
             "TCOM",
             "TIT1",
             "TPE3",
-            "WCOP",
+
             "TCOP",
             "TDAT",
             "TOWN",
             "TEXT",
             "TPE1",
-            "MCDI",
+
             "TOAL",
             "TOPE",
             "TOFN",
             "TOLY",
             "TORY",
-            "WPAY",
-            "PCNT",
-            "POPM",
+
+
+
             "TPUB",
             "TRDA",
             "TSIZ",
@@ -129,31 +129,31 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "TIME",
             "TIT2",
             "TYER",
-            "TXXX"
+
     };
 
     public static String[] frameName = new String[]{
             "Album/Movie/Show title",
             "Band/orchestra/accompaniment",
-            "Commercial frame",
+
             "Composer",
             "Content group description",
             "Conductor/performer refinement",
-            "Copyright/Legal information",
+
             "Copyright message",
             "Date (Format DDMM)",
             "File owner/licensee",
             "Lyricist/Text writer",
             "Lead performer(s)/Soloist(s)",
-            "Music CD identifier",
+
             "Original album/movie/show title",
             "Original artist(s)/performer(s)",
             "Original filename",
             "Original lyricist(s)/text writer(s)",
             "Original release year",
-            "Payment",
-            "Play counter",
-            "Popularimeter",
+
+
+
             "Publisher",
             "Recording dates",
             "Size",
@@ -161,7 +161,7 @@ public class MainActivity extends Activity implements DialogBox.DialogBoxListner
             "Time (Format HHMM)",
             "Title/songname/content description",
             "Year",
-            "Other data"
+
     };
 
 

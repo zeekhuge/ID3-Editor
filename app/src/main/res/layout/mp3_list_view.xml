@@ -40,11 +40,11 @@
             android:minHeight="60dp" />
 
         <Button android:id="@+id/mp3_list_view_rwButton"
-            android:layout_width="40dp"
+            android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_weight="0.1"
             android:layout_gravity="center_vertical"
-            android:text="L"/>
+            android:text="click"/>
     </LinearLayout>
 </LinearLayout>
 
